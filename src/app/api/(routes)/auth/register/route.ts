@@ -1,12 +1,25 @@
 import { ApiError } from '@/app/api/(exceptions)/apiError'
 import { handleApiError } from '@/app/api/(exceptions)/handleApiError'
 import { authService } from '@/app/api/(services)/auth.service'
+import { fileService } from '@/app/api/(services)/file.service'
 import { TOKEN } from '@/typing/enums'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-const authLoginSchema = z.object({
+const authRegisterSchema = z.object({
+	firstName: z
+		.string()
+		.min(1, 'validation.first-name-min')
+		.max(50, 'validation.first-name-max')
+		.trim()
+		.refine(val => val.length > 0, 'validation.first-name-required'),
+	lastName: z
+		.string()
+		.min(1, 'validation.last-name-min')
+		.max(50, 'validation.last-name-max')
+		.trim()
+		.refine(val => val.length > 0, 'validation.last-name-required'),
 	email: z
 		.string()
 		.email('validation.email-invalid')
@@ -21,13 +34,16 @@ const authLoginSchema = z.object({
 export async function POST(req: NextRequest) {
 	try {
 		const body = await req.json()
+		const image = (await req.formData()).get('avatar') as File
 
-		const result = authLoginSchema.safeParse(body)
+		const result = authRegisterSchema.safeParse(body)
 		if (!result.success) {
 			throw new ApiError(result.error.errors[0].message, 400, result.error.errors[0].message)
 		}
 
-		const userData = await authService.login(result.data)
+		const avatarUrl = await fileService.uploadFile(image)
+
+		const userData = await authService.register({...result.data, avatarUrl})
 
 		;(await cookies()).set(TOKEN.REFRESH_TOKEN, userData.refreshToken, {
 			expires: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
@@ -40,12 +56,12 @@ export async function POST(req: NextRequest) {
 		return NextResponse.json(
 			{
 				...userData,
-				message: 'Logged in successfully',
-				translationKey: 'success.auth.login'
+				message: 'Registered successfully',
+				translationKey: 'success.auth.register'
 			},
 			{ status: 200 }
 		)
 	} catch (err) {
-		return handleApiError(err, req)
+		return handleApiError(err)
 	}
 }

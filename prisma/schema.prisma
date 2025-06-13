@@ -6,10 +6,91 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(cuid())
+
+  firstName String
+  lastName  String
+  email     String @unique
+  password  String
+
+  avatarUrl String
+  balance   Int    @default(0)
+
+  refreshToken RefreshToken?
+  userInfo     UserInfo?
+
+  joinRequests JoinRequest[]
+  createdMeets Meet[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model UserInfo {
+  id String @id @default(cuid())
+
+  user   User   @relation(references: [id], fields: [userId], onDelete: Cascade)
+  userId String @unique
+
+  age       Int      @default(0)
+  gender    GENDER   @default(MALE)
+  interests String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model RefreshToken {
+  id String @id @default(cuid())
+
+  user   User   @relation(references: [id], fields: [userId], onDelete: Cascade)
+  userId String @unique
+
+  token String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Meet {
+  id String @id @default(cuid())
+
+  creator   User   @relation(references: [id], fields: [creatorId])
+  creatorId String @unique
+
+  joinRequest JoinRequest[]
+
+  date  DateTime
+  url   String
+  title String
+  tags  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model JoinRequest {
+  id String @id @default(cuid())
+
+  user   User   @relation(references: [id], fields: [userId])
+  userId String
+
+  meet   Meet   @relation(references: [id], fields: [meetId])
+  meetId String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+enum GENDER {
+  MALE
+  FEMALE
 }

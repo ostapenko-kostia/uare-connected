@@ -9,32 +9,36 @@ class AuthService {
 		firstName,
 		lastName,
 		email,
-		password
+		password,
+		avatarUrl,
 	}: {
 		firstName: string
 		lastName: string
 		email: string
 		password: string
+		avatarUrl: string
 	}) {
 		// Checking candidate
 		const candidate = await prisma.user.findUnique({
 			where: { email },
-			include: { subscription: true, credits: true }
+			include: { userInfo: true },
 		})
 		if (candidate)
-			throw new ApiError('This email is already in use', 409, 'errors.server.email-in-use')
+			throw new ApiError(
+				'This email is already in use',
+				409,
+				'errors.server.email-in-use'
+			)
 
 		// Hashing password
 		const hashedPassword = await bcrypt.hash(password, 3)
 
 		// Creating user
 		const user = await prisma.user.create({
-			data: { firstName, lastName, email, password: hashedPassword }
+			data: { firstName, lastName, email, password: hashedPassword, avatarUrl },
 		})
 
-		await prisma.credits.create({
-			data: { userId: user.id }
-		})
+		await prisma.userInfo.create({ data: { userId: user.id } })
 
 		// Creating DTO
 		const userTokenDto = new UserTokenDto(user)
@@ -42,7 +46,7 @@ class AuthService {
 
 		// Creating refresh token
 		const { accessToken, refreshToken } = tokenService.generateTokens({
-			...userTokenDto
+			...userTokenDto,
 		})
 
 		// Saving refresh token
@@ -56,16 +60,24 @@ class AuthService {
 		// Checking user exists
 		const user = await prisma.user.findUnique({
 			where: { email },
-			include: { subscription: true, credits: true }
+			include: { userInfo: true },
 		})
 
 		if (!user)
-			throw new ApiError('Login or password is incorrect', 400, 'errors.server.invalid-credentials')
+			throw new ApiError(
+				'Login or password is incorrect',
+				400,
+				'errors.server.invalid-credentials'
+			)
 
 		// Checking password
 		const isPasswordValid = await bcrypt.compare(password, user.password!)
 		if (!isPasswordValid)
-			throw new ApiError('Login or password is incorrect', 400, 'errors.server.invalid-credentials')
+			throw new ApiError(
+				'Login or password is incorrect',
+				400,
+				'errors.server.invalid-credentials'
+			)
 
 		// Creating DTO
 		const userDto = new UserDto(user)
@@ -73,7 +85,7 @@ class AuthService {
 
 		// Generating tokens
 		const { accessToken, refreshToken } = tokenService.generateTokens({
-			...userTokenDto
+			...userTokenDto,
 		})
 
 		await tokenService.saveRefresh(refreshToken, user.id)
@@ -99,9 +111,10 @@ class AuthService {
 		// Getting user
 		const user = await prisma.user.findUnique({
 			where: { id: userData.id },
-			include: { subscription: true, credits: true }
+			include: { userInfo: true },
 		})
-		if (!user) throw new ApiError('Unauthorized', 401, 'errors.server.unauthorized')
+		if (!user)
+			throw new ApiError('Unauthorized', 401, 'errors.server.unauthorized')
 
 		// Creating DTO
 		const userDto = new UserDto(user)
