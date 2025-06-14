@@ -6,20 +6,26 @@ import { tokenService } from '../(services)/token.service'
 export async function checkAuth(req: NextRequest) {
 	const token = req.headers.get('Authorization')?.split(' ')[1]
 
-	if (!token) throw new ApiError('Unauthorized', 401, 'errors.server.unauthorized')
+	if (!token)
+		throw new ApiError(
+			'Будь ласка, авторизуйтесь',
+			401,
+			'errors.server.unauthorized'
+		)
 
-	const userData = tokenService.validateAccess(token) as any
+	const userData = (await tokenService.validateAccess(token)) as any
 
-	if (!userData.id) throw new ApiError('Unauthorized', 401, 'errors.server.unauthorized')
+	if (!userData || !userData.id)
+		throw new ApiError('Будь ласка, авторизуйтесь', 401)
 
 	const userFromDb = await prisma.user.findUnique({
 		where: {
-			id: userData.id
+			id: userData.id,
 		},
-		include: { refreshToken: true, credits: true, subscription: true }
+		include: { refreshToken: true, userInfo: true },
 	})
 
-	if (!userFromDb) throw new ApiError('Unauthorized', 401, 'errors.server.unauthorized')
+	if (!userFromDb) throw new ApiError('Будь ласка, авторизуйтесь', 401)
 
 	return userFromDb
 }

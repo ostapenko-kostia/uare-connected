@@ -1,32 +1,42 @@
 import { prisma } from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
+import { SignJWT, jwtVerify } from 'jose'
 
 class TokenService {
-	generateTokens(payload: any) {
-		const accessToken = jwt.sign(payload, process.env.ACCESS_SECRET!, {
-			expiresIn: '30m'
-		})
-		const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRET!, {
-			expiresIn: '30d'
-		})
+	async generateTokens(payload: any) {
+		const secret = new TextEncoder().encode(process.env.ACCESS_SECRET!)
+		const refreshSecret = new TextEncoder().encode(process.env.REFRESH_SECRET!)
+
+		const accessToken = await new SignJWT(payload)
+			.setProtectedHeader({ alg: 'HS256' })
+			.setExpirationTime('30m')
+			.sign(secret)
+
+		const refreshToken = await new SignJWT(payload)
+			.setProtectedHeader({ alg: 'HS256' })
+			.setExpirationTime('30d')
+			.sign(refreshSecret)
 
 		return {
 			accessToken,
-			refreshToken
+			refreshToken,
 		}
 	}
 
-	validateAccess(token: string) {
+	async validateAccess(token: string) {
 		try {
-			return jwt.verify(token, process.env.ACCESS_SECRET!)
+			const secret = new TextEncoder().encode(process.env.ACCESS_SECRET!)
+			const { payload } = await jwtVerify(token, secret)
+			return payload
 		} catch (e) {
 			return null
 		}
 	}
 
-	validateRefresh(token: string) {
+	async validateRefresh(token: string) {
 		try {
-			return jwt.verify(token, process.env.REFRESH_SECRET!)
+			const secret = new TextEncoder().encode(process.env.REFRESH_SECRET!)
+			const { payload } = await jwtVerify(token, secret)
+			return payload
 		} catch (e) {
 			return null
 		}
@@ -34,30 +44,30 @@ class TokenService {
 
 	async saveRefresh(token: string, userId: string) {
 		const tokenData = await prisma.refreshToken.findUnique({
-			where: { userId }
+			where: { userId },
 		})
 
 		if (tokenData) {
 			return prisma.refreshToken.update({
 				where: { userId },
-				data: { token }
+				data: { token },
 			})
 		}
 
 		return prisma.refreshToken.create({
-			data: { token, userId }
+			data: { token, userId },
 		})
 	}
 
 	async findRefresh(token: string) {
 		return prisma.refreshToken.findUnique({
-			where: { token }
+			where: { token },
 		})
 	}
 
 	async removeRefresh(token: string) {
 		return prisma.refreshToken.delete({
-			where: { token }
+			where: { token },
 		})
 	}
 }

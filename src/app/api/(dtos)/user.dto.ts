@@ -1,4 +1,4 @@
-import { Credits, Subscription } from '@prisma/client'
+import { UserInfo } from '@prisma/client'
 
 export class UserTokenDto {
 	id: string
@@ -16,8 +16,9 @@ export class UserDto {
 	email: string
 	id: string
 	createdAt: Date
-	subscription: Subscription | null
-	credits: Credits | null
+	userInfo: UserInfo
+	balance: number
+	avatarUrl: string
 
 	constructor(user: any) {
 		this.firstName = user.firstName
@@ -25,7 +26,8 @@ export class UserDto {
 		this.email = user.email
 		this.id = user.id
 		this.createdAt = user.createdAt
-		this.subscription = user.subscription
-		this.credits = user.credits
+		this.userInfo = user.userInfo
+		this.balance = user.balance
+		this.avatarUrl = user.avatarUrl
 	}
 }

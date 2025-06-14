@@ -10,54 +10,61 @@ import { z } from 'zod'
 const authRegisterSchema = z.object({
 	firstName: z
 		.string()
-		.min(1, 'validation.first-name-min')
-		.max(50, 'validation.first-name-max')
+		.min(1, 'Довжина імені повинна бути в діапазоні 1-50 символів')
+		.max(50, 'Довжина імені повинна бути в діапазоні 1-50 символів')
 		.trim()
-		.refine(val => val.length > 0, 'validation.first-name-required'),
+		.refine(val => val.length > 0, 'Необхідно вказати ім`я'),
 	lastName: z
 		.string()
-		.min(1, 'validation.last-name-min')
-		.max(50, 'validation.last-name-max')
+		.min(1, 'Довжина прізвища повинна бути в діапазоні 1-50 символів')
+		.max(50, 'Довжина прізвища повинна бути в діапазоні 1-50 символів')
 		.trim()
-		.refine(val => val.length > 0, 'validation.last-name-required'),
+		.refine(val => val.length > 0, 'Необхідно вказати прізвище'),
 	email: z
 		.string()
-		.email('validation.email-invalid')
-		.refine(val => val.length > 0, 'validation.email-required'),
+		.email('Неправильний формат електронної адреси')
+		.refine(val => val.length > 0, 'Необхідно вказати електронну адресу'),
 	password: z
 		.string()
-		.min(8, 'validation.password-min')
+		.min(8, 'Пароль повинен складатися з мінімум 8 символів')
 		.trim()
-		.refine(val => val.length > 0, 'validation.password-required')
+		.refine(val => val.length > 0, 'Необхідно вказати пароль'),
 })
 
 export async function POST(req: NextRequest) {
 	try {
-		const body = await req.json()
-		const image = (await req.formData()).get('avatar') as File
+		const formData = await req.formData()
+		const body = JSON.parse(formData.get('body')?.toString() ?? '{}')
+		const image = formData.get('avatar') as File
 
 		const result = authRegisterSchema.safeParse(body)
 		if (!result.success) {
-			throw new ApiError(result.error.errors[0].message, 400, result.error.errors[0].message)
+			throw new ApiError(
+				result.error.errors[0].message,
+				400,
+				result.error.errors[0].message
+			)
 		}
 
 		const avatarUrl = await fileService.uploadFile(image)
 
-		const userData = await authService.register({...result.data, avatarUrl})
+		const userData = await authService.register({ ...result.data, avatarUrl })
 
 		;(await cookies()).set(TOKEN.REFRESH_TOKEN, userData.refreshToken, {
 			expires: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'lax',
-			path: '/'
+			path: '/',
 		})
 
 		return NextResponse.json(
 			{
-				...userData,
+				accessToken: userData.accessToken,
+				refreshToken: userData.refreshToken,
+				user: userData.user,
+				userInfo: userData.user.userInfo,
 				message: 'Registered successfully',
-				translationKey: 'success.auth.register'
 			},
 			{ status: 200 }
 		)

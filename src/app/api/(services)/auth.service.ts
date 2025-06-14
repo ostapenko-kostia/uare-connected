@@ -40,12 +40,18 @@ class AuthService {
 
 		await prisma.userInfo.create({ data: { userId: user.id } })
 
+		// Get user with userInfo
+		const userWithInfo = await prisma.user.findUnique({
+			where: { id: user.id },
+			include: { userInfo: true },
+		})
+
 		// Creating DTO
-		const userTokenDto = new UserTokenDto(user)
-		const userDto = new UserDto(user)
+		const userTokenDto = new UserTokenDto(userWithInfo)
+		const userDto = new UserDto(userWithInfo)
 
 		// Creating refresh token
-		const { accessToken, refreshToken } = tokenService.generateTokens({
+		const { accessToken, refreshToken } = await tokenService.generateTokens({
 			...userTokenDto,
 		})
 
@@ -84,7 +90,7 @@ class AuthService {
 		const userTokenDto = new UserTokenDto(user)
 
 		// Generating tokens
-		const { accessToken, refreshToken } = tokenService.generateTokens({
+		const { accessToken, refreshToken } = await tokenService.generateTokens({
 			...userTokenDto,
 		})
 
@@ -103,7 +109,7 @@ class AuthService {
 		if (!refreshToken || !refreshToken.length)
 			throw new ApiError('Unauthorized', 401, 'errors.server.unauthorized')
 
-		const userData: any = tokenService.validateRefresh(refreshToken)
+		const userData: any = await tokenService.validateRefresh(refreshToken)
 		const tokenFromDb = await tokenService.findRefresh(refreshToken)
 		if (!userData || !tokenFromDb)
 			throw new ApiError('Unauthorized', 401, 'errors.server.unauthorized')
@@ -121,7 +127,7 @@ class AuthService {
 		const userTokenDto = new UserTokenDto(user)
 
 		// Generating tokens
-		const tokens = tokenService.generateTokens({ ...userTokenDto })
+		const tokens = await tokenService.generateTokens({ ...userTokenDto })
 
 		// Saving refresh token
 		await tokenService.saveRefresh(tokens.refreshToken, user.id)

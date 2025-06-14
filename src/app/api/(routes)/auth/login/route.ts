@@ -9,13 +9,13 @@ import { z } from 'zod'
 const authLoginSchema = z.object({
 	email: z
 		.string()
-		.email('validation.email-invalid')
-		.refine(val => val.length > 0, 'validation.email-required'),
+		.email('Неправильний формат електронної адреси')
+		.refine(val => val.length > 0, 'Необхідно вказати електронну адресу'),
 	password: z
 		.string()
-		.min(8, 'validation.password-min')
+		.min(8, 'Пароль повинен складатися з мінімум 8 символів')
 		.trim()
-		.refine(val => val.length > 0, 'validation.password-required')
+		.refine(val => val.length > 0, 'Необхідно вказати пароль'),
 })
 
 export async function POST(req: NextRequest) {
@@ -24,7 +24,11 @@ export async function POST(req: NextRequest) {
 
 		const result = authLoginSchema.safeParse(body)
 		if (!result.success) {
-			throw new ApiError(result.error.errors[0].message, 400, result.error.errors[0].message)
+			throw new ApiError(
+				result.error.errors[0].message,
+				400,
+				result.error.errors[0].message
+			)
 		}
 
 		const userData = await authService.login(result.data)
@@ -34,14 +38,17 @@ export async function POST(req: NextRequest) {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'lax',
-			path: '/'
+			path: '/',
 		})
 
 		return NextResponse.json(
 			{
-				...userData,
+				accessToken: userData.accessToken,
+				refreshToken: userData.refreshToken,
+				user: userData.user,
+				userInfo: userData.user.userInfo,
 				message: 'Logged in successfully',
-				translationKey: 'success.auth.login'
+				translationKey: 'success.auth.login',
 			},
 			{ status: 200 }
 		)

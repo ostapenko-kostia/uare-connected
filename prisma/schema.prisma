@@ -29,6 +29,7 @@ model User {
 
   joinRequests JoinRequest[]
   createdMeets Meet[]
+  matches      Match[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -43,6 +44,8 @@ model UserInfo {
   age       Int      @default(0)
   gender    GENDER   @default(MALE)
   interests String[] @default([])
+  hobbies   String[] @default([])
+  languages String[] @default(["en"])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -64,14 +67,21 @@ model Meet {
   id String @id @default(cuid())
 
   creator   User   @relation(references: [id], fields: [creatorId])
-  creatorId String @unique
+  creatorId String
 
   joinRequest JoinRequest[]
+  matches     Match[]
 
-  date  DateTime
-  url   String
-  title String
-  tags  String
+  date     DateTime
+  url      String
+  title    String
+  tags     String[]
+  language String
+
+  maxMembers Int @default(5)
+
+  zoomMeetingId String?
+  zoomPassword  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -85,6 +95,19 @@ model JoinRequest {
 
   meet   Meet   @relation(references: [id], fields: [meetId])
   meetId String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model Match {
+  id String @id @default(cuid())
+
+  user   User   @relation(references: [id], fields: [userId])
+  userId String
+
+  meet   Meet   @relation(references: [id], fields: [meetId])
+  meetId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
