@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import { UserDto, UserTokenDto } from '../(dtos)/user.dto'
 import { ApiError } from '../(exceptions)/apiError'
 import { tokenService } from './token.service'

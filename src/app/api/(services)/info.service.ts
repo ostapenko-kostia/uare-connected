@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { ApiError } from '../(exceptions)/apiError'
 import { prisma } from '@/lib/prisma'
+import { checkAuth } from '../(utils)/checkAuth'
 
 const updateInfoSchema = z.object({
 	age: z
@@ -13,6 +14,12 @@ const updateInfoSchema = z.object({
 			.string({ message: 'Кожен інтерес повинен бути стрічкою' })
 			.nonempty({ message: 'Кожен інтерес не повинен бути пустим' }),
 		{ message: 'Інтереси повинні бути масивом' }
+	),
+	languages: z.array(
+		z
+			.string({ message: 'Кожна мова повинен бути стрічкою' })
+			.nonempty({ message: 'Кожна мова не повинна бути пустою' }),
+		{ message: 'Мови повинні бути масивом' }
 	),
 })
 
@@ -27,10 +34,21 @@ class InfoService {
 			)
 		}
 
-		return await prisma.userInfo.update({
+		const candidate = await prisma.userInfo.findUnique({
+			where: {
+				id,
+			},
+		})
+
+		if (!candidate) {
+			throw new ApiError('Інформація не знайдена', 404)
+		}
+		const info = await prisma.userInfo.update({
 			where: { id },
 			data: result.data,
 		})
+
+		return info
 	}
 }
 
