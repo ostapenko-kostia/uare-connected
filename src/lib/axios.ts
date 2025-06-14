@@ -1,3 +1,4 @@
+import { authService } from '@/services/auth.service'
 import { TOKEN } from '@/typing/enums'
 import axios from 'axios'
 import Cookies from 'js-cookie'
@@ -32,7 +33,7 @@ api.interceptors.response.use(
 				if (refreshResponse?.status === 200) {
 					// Update access token in the original request
 					originalRequest.headers['Authorization'] =
-						`Bearer ${getAccessToken()}`
+						`Bearer ${authService.getAccessToken()}`
 					return api.request(originalRequest)
 				}
 				// If refresh failed, just reject the original error
