@@ -11,7 +11,9 @@ export function useLogin() {
 			window.location.href = '/'
 		},
 		onError: (error: any) => {
-			toast.error(error.response.data.message)
+			console.log(error)
+			const errorMessage = error?.message || 'Помилка входу в систему'
+			toast.error(errorMessage)
 		},
 	})
 }
@@ -25,7 +27,7 @@ export function useRegister() {
 				firstName: string
 				lastName: string
 			}
-			avatar: File
+			avatar: File | null
 		}) => {
 			return await authService.register(data.body, data.avatar)
 		},
@@ -33,7 +35,9 @@ export function useRegister() {
 			window.location.href = '/'
 		},
 		onError: (error: any) => {
-			toast.error(error.response.data.message)
+			const errorMessage =
+				error?.message || error?.response?.data?.message || 'Помилка реєстрації'
+			toast.error(errorMessage)
 		},
 	})
 }
@@ -55,7 +59,11 @@ export function useLogout() {
 			window.location.href = '/'
 		},
 		onError: (error: any) => {
-			toast.error(error.response.data.message)
+			const errorMessage =
+				error?.message ||
+				error?.response?.data?.message ||
+				'Помилка виходу з системи'
+			toast.error(errorMessage)
 		},
 	})
 }

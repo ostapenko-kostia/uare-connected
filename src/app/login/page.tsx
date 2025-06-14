@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useLogin } from '@/hooks/useAuth'
-import { Eye, EyeOff, Lock, LoaderIcon, Mail } from 'lucide-react'
+import { Eye, EyeOff, LoaderIcon, Lock, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 
@@ -27,6 +27,7 @@ export default function LoginPage() {
 		try {
 			await mutateAsync(data)
 		} catch (error) {
+			// Error is already handled by the useLogin hook via toast
 			console.error('Login error:', error)
 		}
 	}

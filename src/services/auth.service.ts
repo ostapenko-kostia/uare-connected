@@ -18,18 +18,23 @@ class AuthService {
 	}
 
 	async login(email: string, password: string) {
-		const res = await api.post<IAuthResponse>('/auth/login', {
-			email,
-			password,
-		})
-		if (res?.status === 200) {
-			this.setAccessToken(res.data.accessToken)
-			useAuthStore.setState({ user: res.data.user, isAuth: true })
-			typeof window !== 'undefined' &&
-				localStorage.setItem('user', JSON.stringify(res.data.user))
-			return res
+		try {
+			const res = await api.post<IAuthResponse>('/auth/login', {
+				email,
+				password,
+			})
+			if (res?.status === 200) {
+				this.setAccessToken(res.data.accessToken)
+				useAuthStore.setState({ user: res.data.user, isAuth: true })
+				typeof window !== 'undefined' &&
+					localStorage.setItem('user', JSON.stringify(res.data.user))
+				return res
+			}
+		} catch (error: any) {
+			const errorMessage =
+				error?.response?.data?.message || 'Помилка входу в систему'
+			throw new Error(errorMessage)
 		}
-		throw new Error()
 	}
 
 	async register(
@@ -39,26 +44,33 @@ class AuthService {
 			firstName: string
 			lastName: string
 		},
-		avatar: File
+		avatar: File | null
 	) {
 		const formData = new FormData()
 		formData.append('body', JSON.stringify(body))
-		formData.append('avatar', avatar)
-
-		const res = await api.post('/auth/register', formData, {
-			headers: {
-				'Content-Type': 'multipart/form-data',
-			},
-		})
-
-		if (res?.status === 200) {
-			this.setAccessToken(res.data.accessToken)
-			useAuthStore.setState({ user: res.data.user, isAuth: true })
-			typeof window !== 'undefined' &&
-				localStorage.setItem('user', JSON.stringify(res.data.user))
-			return res
+		if (avatar) {
+			formData.append('avatar', avatar)
 		}
-		throw new Error()
+
+		try {
+			const res = await api.post('/auth/register', formData, {
+				headers: {
+					'Content-Type': 'multipart/form-data',
+				},
+			})
+
+			if (res?.status === 200) {
+				this.setAccessToken(res.data.accessToken)
+				useAuthStore.setState({ user: res.data.user, isAuth: true })
+				typeof window !== 'undefined' &&
+					localStorage.setItem('user', JSON.stringify(res.data.user))
+				return res
+			}
+		} catch (error: any) {
+			const errorMessage =
+				error?.response?.data?.message || 'Помилка реєстрації'
+			throw new Error(errorMessage)
+		}
 	}
 
 	async logout() {

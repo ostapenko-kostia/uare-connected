@@ -9,6 +9,7 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { useRegister } from '@/hooks/useAuth'
 import {
 	Eye,
 	EyeOff,
@@ -20,96 +21,78 @@ import {
 	X,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import toast from 'react-hot-toast'
+
+interface Form {
+	email: string
+	password: string
+	confirmPassword: string
+	firstName: string
+	lastName: string
+	avatar: FileList | null
+}
 
 export default function RegisterPage() {
-	const [formData, setFormData] = useState({
-		firstName: '',
-		lastName: '',
-		email: '',
-		password: '',
-		confirmPassword: '',
-	})
+	const { mutateAsync, isPending: isLoading } = useRegister()
+	const { register, handleSubmit, setValue } = useForm<Form>()
 	const [showPassword, setShowPassword] = useState(false)
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-	const [isLoading, setIsLoading] = useState(false)
 	const [agreeToTerms, setAgreeToTerms] = useState(false)
-	const [avatar, setAvatar] = useState<File | null>(null)
 	const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
-	const handleInputChange = (field: string, value: string) => {
-		setFormData(prev => ({
-			...prev,
-			[field]: value,
-		}))
-	}
-
 	const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0]
+		const file = e.target.files
 		if (file) {
-			// Перевірка типу файлу
-			if (!file.type.startsWith('image/')) {
+			if (!file[0].type.startsWith('image/')) {
 				alert('Будь ласка, оберіть файл зображення')
 				return
 			}
 
-			// Перевірка розміру файлу (максимум 5MB)
-			if (file.size > 5 * 1024 * 1024) {
+			if (file[0].size > 5 * 1024 * 1024) {
 				alert('Розмір файлу не повинен перевищувати 5MB')
 				return
 			}
 
-			setAvatar(file)
+			setValue('avatar', file)
 
-			// Створення попереднього перегляду
 			const reader = new FileReader()
 			reader.onloadend = () => {
 				setAvatarPreview(reader.result as string)
 			}
-			reader.readAsDataURL(file)
+			reader.readAsDataURL(file[0])
 		}
 	}
 
 	const removeAvatar = () => {
-		setAvatar(null)
+		setValue('avatar', null)
 		setAvatarPreview(null)
-		// Очищення input
 		const fileInput = document.getElementById('avatar') as HTMLInputElement
 		if (fileInput) {
 			fileInput.value = ''
 		}
 	}
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault()
-		setIsLoading(true)
-
-		if (formData.password !== formData.confirmPassword) {
-			alert('Паролі не співпадають!')
-			setIsLoading(false)
+	const signup = async (data: Form) => {
+		if (data.password !== data.confirmPassword) {
+			toast.error('Паролі не співпадають!')
 			return
 		}
 
 		if (!agreeToTerms) {
-			alert('Будь ласка, погодьтеся з умовами використання')
-			setIsLoading(false)
+			toast.error('Будь ласка, погодьтеся з умовами використання')
 			return
 		}
 
-		// Тут буде логіка для реєстрації
-		try {
-			// TODO: Implement registration logic
-			console.log('Registration attempt:', {
-				...formData,
-				avatar: avatar?.name,
-			})
-
-			// Симуляція запиту
-			await new Promise(resolve => setTimeout(resolve, 1500))
-		} catch (error) {
-			console.error('Registration error:', error)
-		} finally {
-			setIsLoading(false)
-		}
+		await mutateAsync({
+			body: {
+				email: data.email,
+				firstName: data.firstName,
+				lastName: data.lastName,
+				password: data.password,
+			},
+			avatar: data.avatar?.[0] || null,
+		})
 	}
 
 	return (
@@ -166,6 +149,7 @@ export default function RegisterPage() {
 									type='file'
 									accept='image/*'
 									onChange={handleAvatarChange}
+									{...register('avatar')}
 									className='hidden'
 								/>
 								<p className='text-xs text-slate-500 dark:text-slate-400 mt-1'>
@@ -189,10 +173,7 @@ export default function RegisterPage() {
 											id='firstName'
 											type='text'
 											placeholder="Ваше ім'я"
-											value={formData.firstName}
-											onChange={e =>
-												handleInputChange('firstName', e.target.value)
-											}
+											{...register('firstName')}
 											className='pl-10 h-11'
 											required
 										/>
@@ -212,10 +193,7 @@ export default function RegisterPage() {
 											id='lastName'
 											type='text'
 											placeholder='Ваше прізвище'
-											value={formData.lastName}
-											onChange={e =>
-												handleInputChange('lastName', e.target.value)
-											}
+											{...register('lastName')}
 											className='pl-10 h-11'
 											required
 										/>
@@ -236,8 +214,7 @@ export default function RegisterPage() {
 										id='email'
 										type='email'
 										placeholder='example@email.com'
-										value={formData.email}
-										onChange={e => handleInputChange('email', e.target.value)}
+										{...register('email')}
 										className='pl-10 h-11'
 										required
 									/>
@@ -257,10 +234,7 @@ export default function RegisterPage() {
 										id='password'
 										type={showPassword ? 'text' : 'password'}
 										placeholder='Створіть пароль'
-										value={formData.password}
-										onChange={e =>
-											handleInputChange('password', e.target.value)
-										}
+										{...register('password')}
 										className='pl-10 pr-10 h-11'
 										required
 										minLength={8}
@@ -295,10 +269,7 @@ export default function RegisterPage() {
 										id='confirmPassword'
 										type={showConfirmPassword ? 'text' : 'password'}
 										placeholder='Підтвердіть пароль'
-										value={formData.confirmPassword}
-										onChange={e =>
-											handleInputChange('confirmPassword', e.target.value)
-										}
+										{...register('confirmPassword')}
 										className='pl-10 pr-10 h-11'
 										required
 									/>

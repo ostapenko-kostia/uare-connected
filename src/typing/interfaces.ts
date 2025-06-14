@@ -4,4 +4,4 @@ export interface IAuthResponse {
 	accessToken: string
 	user: User
 	userInfo: UserInfo
-}
+} 
