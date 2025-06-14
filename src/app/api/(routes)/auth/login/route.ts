@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 				refreshToken: userData.refreshToken,
 				user: userData.user,
 				userInfo: userData.user.userInfo,
-				message: 'Logged in successfully',
+				message: 'Успішний вхід в систему',
 				translationKey: 'success.auth.login',
 			},
 			{ status: 200 }

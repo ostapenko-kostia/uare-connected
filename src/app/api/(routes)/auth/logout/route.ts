@@ -11,7 +11,10 @@ export async function POST(req: NextRequest) {
 
 		if (!refreshToken) {
 			return NextResponse.json(
-				{ message: 'No refresh token', translationKey: 'errors.server.unauthorized' },
+				{
+					message: 'Відсутній токен оновлення',
+					translationKey: 'errors.server.unauthorized',
+				},
 				{ status: 401 }
 			)
 		}
@@ -23,7 +26,10 @@ export async function POST(req: NextRequest) {
 		cookiesStorage.delete(TOKEN.ACCESS_TOKEN)
 
 		return NextResponse.json(
-			{ message: 'Logged out successfully', translationKey: 'success.auth.logout' },
+			{
+				message: 'Успішний вихід з системи',
+				translationKey: 'success.auth.logout',
+			},
 			{ status: 200 }
 		)
 	} catch (err) {

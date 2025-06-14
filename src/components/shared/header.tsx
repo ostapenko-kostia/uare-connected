@@ -1,15 +1,112 @@
 'use client'
 
-import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
-import Link from 'next/link'
-import clsx from 'clsx'
-import { usePathname } from 'next/navigation'
+import { authService } from '@/services/auth.service'
+import { Menu, Plus, Search, User, X } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import { Button } from '../ui/button'
 
-export default function Header() {
+const Header = dynamic(() => Promise.resolve(HeaderComponent), {
+	ssr: false,
+})
+export default Header
+
+interface NavLinkProps {
+	href: string
+	className?: string
+	children: React.ReactNode
+}
+
+const NavLink = ({ href, className = '', children }: NavLinkProps) => (
+	<Link
+		href={href}
+		className={`text-[#1f1f1f] hover:text-[#97c2ec] transition-colors ${className}`}
+	>
+		{children}
+	</Link>
+)
+
+const UserProfileLink = ({ user }: { user: any }) => (
+	<NavLink href='/dashboard' className='flex items-center gap-2'>
+		{user.avatarUrl ? (
+			<Image
+				src={user.avatarUrl}
+				alt='logo'
+				width={30}
+				height={30}
+				className='w-5 h-5 rounded-full'
+			/>
+		) : (
+			<User className='w-5 h-5' />
+		)}
+		<span>{user.firstName}</span>
+	</NavLink>
+)
+
+const MeetLinks = () => (
+	<>
+		<NavLink href='/meets/search' className='flex items-center gap-2'>
+			<Search className='w-5 h-5' />
+			<span>Знайти міт</span>
+		</NavLink>
+		<NavLink href='/meets/create' className='flex items-center gap-2'>
+			<Plus className='w-5 h-5' />
+			<span>Створити Міт</span>
+		</NavLink>
+	</>
+)
+
+const BasicLinks = () => (
+	<>
+		<NavLink href='/'>Головна</NavLink>
+		<NavLink href='/contact'>Тех. Підтримка</NavLink>
+	</>
+)
+
+const LoginLink = () => (
+	<NavLink href='/login'>
+		<Button className='bg-blue-300'>Вхід</Button>
+	</NavLink>
+)
+
+function HeaderComponent() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false)
+	const pathname = usePathname()
+	const user = authService.getUser()
+
+	const isMeetOrDashboard =
+		pathname.includes('/dashboard') || pathname.includes('/meets')
+
+	const renderNavigation = (isMobile = false) => {
+		const baseClass = isMobile ? 'block' : ''
+
+		if (user) {
+			if (isMeetOrDashboard) {
+				return (
+					<>
+						<MeetLinks />
+						<UserProfileLink user={user} />
+					</>
+				)
+			}
+			return (
+				<>
+					<BasicLinks />
+					<UserProfileLink user={user} />
+				</>
+			)
+		}
+
+		return (
+			<>
+				<BasicLinks />
+				<LoginLink />
+			</>
+		)
+	}
 
 	return (
 		<header className='sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-40'>
@@ -24,30 +121,7 @@ export default function Header() {
 
 					{/* Desktop Navigation */}
 					<nav className='hidden md:flex space-x-8 items-center'>
-						<Link
-							href='/'
-							className='text-[#1f1f1f] hover:text-[#97c2ec] transition-colors'
-						>
-							Головна
-						</Link>
-						<Link
-							href='/about'
-							className='text-[#1f1f1f] hover:text-[#97c2ec] transition-colors'
-						>
-							Про нас
-						</Link>
-						<Link
-							href='/contact'
-							className='text-[#1f1f1f] hover:text-[#97c2ec] transition-colors'
-						>
-							Тех. Підтримка
-						</Link>
-						<Link
-							href='/login'
-							className='text-[#1f1f1f] hover:text-[#97c2ec] transition-colors'
-						>
-							<Button className='bg-blue-300'>Вхід</Button>
-						</Link>
+						{renderNavigation()}
 					</nav>
 
 					{/* Mobile Menu Button */}
@@ -67,29 +141,7 @@ export default function Header() {
 			{/* Mobile Menu */}
 			{isMenuOpen && (
 				<div className='md:hidden bg-white border-t border-gray-100'>
-					<nav className='px-4 py-4 space-y-4'>
-						<Link href='#' className='block text-[#97c2ec] font-medium'>
-							Головна
-						</Link>
-						<Link
-							href='#'
-							className='block text-[#1f1f1f] hover:text-[#97c2ec] transition-colors'
-						>
-							Про нас
-						</Link>
-						<Link
-							href='#'
-							className='block text-[#1f1f1f] hover:text-[#97c2ec] transition-colors'
-						>
-							Контакти
-						</Link>
-						<Link
-							href='/login'
-							className='text-[#1f1f1f] hover:text-[#97c2ec] transition-colors'
-						>
-							<Button className='bg-blue-300'>Вхід</Button>
-						</Link>
-					</nav>
+					<nav className='px-4 py-4 space-y-4'>{renderNavigation(true)}</nav>
 				</div>
 			)}
 		</header>

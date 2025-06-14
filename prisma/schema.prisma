@@ -44,7 +44,6 @@ model UserInfo {
   age       Int      @default(0)
   gender    GENDER   @default(MALE)
   interests String[] @default([])
-  hobbies   String[] @default([])
   languages String[] @default(["en"])
 
   createdAt DateTime @default(now())

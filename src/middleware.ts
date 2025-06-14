@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { TOKEN } from './typing/enums'
 
 // Protected routes that require authentication
-const protectedRoutes = ['/dashboard']
+const protectedRoutes = ['/dashboard', '/meets']
 
 // Public routes that don't require authentication
-const publicRoutes = ['/login', '/register', '/about', '/contact', '/']
+const loginRoutes = ['/login', '/register']
 
 export async function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl
@@ -15,10 +15,10 @@ export async function middleware(request: NextRequest) {
 	const isProtectedRoute = protectedRoutes.some(route =>
 		pathname.startsWith(route)
 	)
-	const isPublicRoute = publicRoutes.some(route => pathname === route)
+	const isLoginRoute = loginRoutes.some(route => pathname.startsWith(route))
 
-	// If it's not a protected route, allow the request to continue
-	if (!isProtectedRoute) {
+	// If it's not a protected route and not a login route, allow the request to continue
+	if (!isProtectedRoute && !isLoginRoute) {
 		return NextResponse.next()
 	}
 
@@ -36,10 +36,14 @@ export async function middleware(request: NextRequest) {
 
 	token = accessTokenFromCookie || accessTokenFromHeader
 
-	// If no token is found, redirect to login
+	// If no token is found
 	if (!token) {
+		// If trying to access login/register pages, allow it
+		if (isLoginRoute) {
+			return NextResponse.next()
+		}
+		// Otherwise redirect to login
 		const loginUrl = new URL('/login', request.url)
-		loginUrl.searchParams.set('redirect', pathname)
 		return NextResponse.redirect(loginUrl)
 	}
 
@@ -53,12 +57,19 @@ export async function middleware(request: NextRequest) {
 			throw new Error('Invalid token payload')
 		}
 
-		// Token is valid, allow the request to continue
+		// User is authenticated
+		if (isLoginRoute) {
+			// If authenticated user tries to access login/register, redirect to dashboard
+			return NextResponse.redirect(new URL('/dashboard', request.url))
+		}
+		// Allow access to protected routes
 		return NextResponse.next()
 	} catch (error) {
-		// Token is invalid or expired, redirect to login
+		// Token is invalid or expired
+		if (isLoginRoute) {
+			return NextResponse.next()
+		}
 		const loginUrl = new URL('/login', request.url)
-		loginUrl.searchParams.set('redirect', pathname)
 		return NextResponse.redirect(loginUrl)
 	}
 }

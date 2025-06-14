@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 				refreshToken: userData.refreshToken,
 				user: userData.user,
 				userInfo: userData.user.userInfo,
-				message: 'Registered successfully',
+				message: 'Успішна реєстрація',
 			},
 			{ status: 200 }
 		)

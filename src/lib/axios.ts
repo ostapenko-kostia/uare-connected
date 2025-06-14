@@ -2,6 +2,7 @@ import { authService } from '@/services/auth.service'
 import { TOKEN } from '@/typing/enums'
 import axios from 'axios'
 import Cookies from 'js-cookie'
+import toast from 'react-hot-toast'
 
 const api = axios.create({
 	baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -43,6 +44,15 @@ api.interceptors.response.use(
 				return Promise.reject(error)
 			}
 		}
+		if (
+			error?.response?.data?.message &&
+			!error?.response?.config.url.includes('auth/refresh') &&
+			!error?.response?.config.url.includes('auth/logout')
+		) {
+			toast.error(error?.response?.data?.message)
+		}
+
+		return Promise.reject(error)
 	}
 )
 

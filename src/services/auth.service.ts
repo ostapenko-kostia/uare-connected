@@ -1,20 +1,37 @@
+'use client'
+
 import api from '@/lib/axios'
-import { useAuthStore } from '@/store/auth.store'
 import { TOKEN } from '@/typing/enums'
 import { IAuthResponse } from '@/typing/interfaces'
+import { User, UserInfo } from '@prisma/client'
 import Cookies from 'js-cookie'
 
 class AuthService {
-	setAccessToken(token: string) {
-		Cookies.set(TOKEN.ACCESS_TOKEN, token)
-	}
-
 	getAccessToken() {
 		return Cookies.get(TOKEN.ACCESS_TOKEN)
 	}
 
+	setAccessToken(token: string) {
+		Cookies.set(TOKEN.ACCESS_TOKEN, token)
+	}
+
 	clearAccessToken() {
 		Cookies.remove(TOKEN.ACCESS_TOKEN)
+	}
+
+	saveUser(user: User) {
+		typeof window !== 'undefined' &&
+			localStorage.setItem('user', JSON.stringify(user))
+	}
+
+	getUser(): User & { userInfo: UserInfo } {
+		return typeof window !== 'undefined'
+			? JSON.parse(localStorage.getItem('user') || 'null')
+			: null
+	}
+
+	clearUser() {
+		typeof window !== 'undefined' && localStorage.removeItem('user')
 	}
 
 	async login(email: string, password: string) {
@@ -25,7 +42,6 @@ class AuthService {
 			})
 			if (res?.status === 200) {
 				this.setAccessToken(res.data.accessToken)
-				useAuthStore.setState({ user: res.data.user, isAuth: true })
 				typeof window !== 'undefined' &&
 					localStorage.setItem('user', JSON.stringify(res.data.user))
 				return res
@@ -52,32 +68,27 @@ class AuthService {
 			formData.append('avatar', avatar)
 		}
 
-		try {
-			const res = await api.post('/auth/register', formData, {
-				headers: {
-					'Content-Type': 'multipart/form-data',
-				},
-			})
+		const res = await api.post('/auth/register', formData, {
+			headers: {
+				'Content-Type': 'multipart/form-data',
+			},
+		})
 
-			if (res?.status === 200) {
-				this.setAccessToken(res.data.accessToken)
-				useAuthStore.setState({ user: res.data.user, isAuth: true })
-				typeof window !== 'undefined' &&
-					localStorage.setItem('user', JSON.stringify(res.data.user))
-				return res
-			}
-		} catch (error: any) {
-			const errorMessage =
-				error?.response?.data?.message || 'Помилка реєстрації'
-			throw new Error(errorMessage)
+		console.log(res)
+
+		if (res?.status === 200) {
+			this.setAccessToken(res.data.accessToken)
+			typeof window !== 'undefined' &&
+				localStorage.setItem('user', JSON.stringify(res.data.user))
+			return res
 		}
+		throw new Error('Помилка реєстрації')
 	}
 
 	async logout() {
 		try {
 			await api.post('/auth/logout')
 			this.clearAccessToken()
-			useAuthStore.setState({ user: null, isAuth: false })
 			typeof window !== 'undefined' && localStorage.removeItem('user')
 		} catch (error) {
 			console.error('Logout error:', error)
@@ -90,16 +101,15 @@ class AuthService {
 			const res = await api.post<IAuthResponse>('/auth/refresh')
 			if (res?.status === 200) {
 				this.setAccessToken(res.data.accessToken)
-				useAuthStore.setState({ user: res.data.user, isAuth: true })
 				return res
 			}
-			throw new Error('Failed to refresh token')
+			throw new Error('Помилка оновлення токену')
 		} catch (error) {
 			this.clearAccessToken()
-			useAuthStore.setState({ user: null, isAuth: false })
 			typeof window !== 'undefined' && localStorage.removeItem('user')
 			throw error
 		}
 	}
 }
+
 export const authService = new AuthService()

@@ -21,11 +21,10 @@ class AuthService {
 		// Checking candidate
 		const candidate = await prisma.user.findUnique({
 			where: { email },
-			include: { userInfo: true },
 		})
 		if (candidate)
 			throw new ApiError(
-				'This email is already in use',
+				'Ця електронна адреса вже використовується',
 				409,
 				'errors.server.email-in-use'
 			)
@@ -71,7 +70,7 @@ class AuthService {
 
 		if (!user)
 			throw new ApiError(
-				'Login or password is incorrect',
+				'Неправильний логін або пароль',
 				400,
 				'errors.server.invalid-credentials'
 			)
@@ -80,7 +79,7 @@ class AuthService {
 		const isPasswordValid = await bcrypt.compare(password, user.password!)
 		if (!isPasswordValid)
 			throw new ApiError(
-				'Login or password is incorrect',
+				'Неправильний логін або пароль',
 				400,
 				'errors.server.invalid-credentials'
 			)
@@ -107,12 +106,20 @@ class AuthService {
 	async refresh(refreshToken: string) {
 		// Validating Refresh Token
 		if (!refreshToken || !refreshToken.length)
-			throw new ApiError('Unauthorized', 401, 'errors.server.unauthorized')
+			throw new ApiError(
+				'Необхідна авторизація',
+				401,
+				'errors.server.unauthorized'
+			)
 
 		const userData: any = await tokenService.validateRefresh(refreshToken)
 		const tokenFromDb = await tokenService.findRefresh(refreshToken)
 		if (!userData || !tokenFromDb)
-			throw new ApiError('Unauthorized', 401, 'errors.server.unauthorized')
+			throw new ApiError(
+				'Необхідна авторизація',
+				401,
+				'errors.server.unauthorized'
+			)
 
 		// Getting user
 		const user = await prisma.user.findUnique({
@@ -120,7 +127,11 @@ class AuthService {
 			include: { userInfo: true },
 		})
 		if (!user)
-			throw new ApiError('Unauthorized', 401, 'errors.server.unauthorized')
+			throw new ApiError(
+				'Необхідна авторизація',
+				401,
+				'errors.server.unauthorized'
+			)
 
 		// Creating DTO
 		const userDto = new UserDto(user)

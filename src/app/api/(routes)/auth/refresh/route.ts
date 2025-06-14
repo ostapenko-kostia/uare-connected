@@ -11,7 +11,10 @@ export async function POST(req: NextRequest) {
 
 		if (!refreshToken) {
 			return NextResponse.json(
-				{ message: 'No refresh token', translationKey: 'errors.server.unauthorized' },
+				{
+					message: 'Відсутній токен оновлення',
+					translationKey: 'errors.server.unauthorized',
+				},
 				{ status: 401 }
 			)
 		}
@@ -24,7 +27,7 @@ export async function POST(req: NextRequest) {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'lax',
-			path: '/'
+			path: '/',
 		})
 
 		return NextResponse.json(userData, { status: 200 })

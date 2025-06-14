@@ -1,19 +1,18 @@
+'use client'
+
 import { authService } from '@/services/auth.service'
 import { useMutation } from '@tanstack/react-query'
-import { toast } from 'react-hot-toast'
 
 export function useLogin() {
 	return useMutation({
 		mutationFn: async (data: { email: string; password: string }) => {
 			return await authService.login(data.email, data.password)
 		},
-		onSuccess: () => {
-			window.location.href = '/'
-		},
-		onError: (error: any) => {
-			console.log(error)
-			const errorMessage = error?.message || 'Помилка входу в систему'
-			toast.error(errorMessage)
+		onSuccess: response => {
+			if (response?.data?.user) {
+				authService.saveUser(response.data.user)
+				window.location.href = '/'
+			}
 		},
 	})
 }
@@ -31,13 +30,11 @@ export function useRegister() {
 		}) => {
 			return await authService.register(data.body, data.avatar)
 		},
-		onSuccess: () => {
-			window.location.href = '/'
-		},
-		onError: (error: any) => {
-			const errorMessage =
-				error?.message || error?.response?.data?.message || 'Помилка реєстрації'
-			toast.error(errorMessage)
+		onSuccess: response => {
+			if (response?.data?.user) {
+				authService.saveUser(response.data.user)
+				window.location.href = '/'
+			}
 		},
 	})
 }
@@ -46,6 +43,11 @@ export function useRefresh() {
 	return useMutation({
 		mutationFn: async () => {
 			return await authService.refresh()
+		},
+		onSuccess: response => {
+			if (response?.data?.user) {
+				authService.saveUser(response.data.user)
+			}
 		},
 	})
 }
@@ -56,14 +58,9 @@ export function useLogout() {
 			return await authService.logout()
 		},
 		onSuccess: () => {
+			authService.clearAccessToken()
+			authService.clearUser()
 			window.location.href = '/'
-		},
-		onError: (error: any) => {
-			const errorMessage =
-				error?.message ||
-				error?.response?.data?.message ||
-				'Помилка виходу з системи'
-			toast.error(errorMessage)
 		},
 	})
 }

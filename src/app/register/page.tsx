@@ -30,7 +30,7 @@ interface Form {
 	confirmPassword: string
 	firstName: string
 	lastName: string
-	avatar: FileList | null
+	avatar: FileList
 }
 
 export default function RegisterPage() {
@@ -39,41 +39,8 @@ export default function RegisterPage() {
 	const [showPassword, setShowPassword] = useState(false)
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 	const [agreeToTerms, setAgreeToTerms] = useState(false)
-	const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
-	const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files
-		if (file) {
-			if (!file[0].type.startsWith('image/')) {
-				alert('Будь ласка, оберіть файл зображення')
-				return
-			}
-
-			if (file[0].size > 5 * 1024 * 1024) {
-				alert('Розмір файлу не повинен перевищувати 5MB')
-				return
-			}
-
-			setValue('avatar', file)
-
-			const reader = new FileReader()
-			reader.onloadend = () => {
-				setAvatarPreview(reader.result as string)
-			}
-			reader.readAsDataURL(file[0])
-		}
-	}
-
-	const removeAvatar = () => {
-		setValue('avatar', null)
-		setAvatarPreview(null)
-		const fileInput = document.getElementById('avatar') as HTMLInputElement
-		if (fileInput) {
-			fileInput.value = ''
-		}
-	}
-
-	const signup = async (data: Form) => {
+	const onSubmit = async (data: Form) => {
 		if (data.password !== data.confirmPassword) {
 			toast.error('Паролі не співпадають!')
 			return
@@ -91,7 +58,7 @@ export default function RegisterPage() {
 				lastName: data.lastName,
 				password: data.password,
 			},
-			avatar: data.avatar?.[0] || null,
+			avatar: data.avatar?.[0],
 		})
 	}
 
@@ -111,44 +78,18 @@ export default function RegisterPage() {
 					<CardContent>
 						{/* Avatar Upload Section */}
 						<div className='mb-6 flex flex-col items-center space-y-4'>
-							<div className='relative'>
-								{avatarPreview ? (
-									<div className='relative'>
-										<img
-											src={avatarPreview}
-											alt='Avatar preview'
-											className='w-24 h-24 rounded-full object-cover border-4 border-slate-200 dark:border-slate-600'
-										/>
-										<button
-											type='button'
-											onClick={removeAvatar}
-											className='absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 transition-colors'
-										>
-											<X className='w-4 h-4' />
-										</button>
-									</div>
-								) : (
-									<div className='w-24 h-24 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-500'>
-										<User className='w-8 h-8 text-slate-400' />
-									</div>
-								)}
-							</div>
-
 							<div className='text-center'>
 								<label
 									htmlFor='avatar'
 									className='inline-flex items-center space-x-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer transition-colors text-sm font-medium'
 								>
 									<Upload className='w-4 h-4' />
-									<span>
-										{avatarPreview ? 'Змінити фото' : 'Завантажити фото'}
-									</span>
+									<span>Завантажити фото</span>
 								</label>
 								<input
 									id='avatar'
 									type='file'
 									accept='image/*'
-									onChange={handleAvatarChange}
 									{...register('avatar')}
 									className='hidden'
 								/>
@@ -158,7 +99,7 @@ export default function RegisterPage() {
 							</div>
 						</div>
 
-						<form onSubmit={handleSubmit} className='space-y-4'>
+						<form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
 							<div className='grid grid-cols-2 gap-4'>
 								<div className='space-y-2'>
 									<label
