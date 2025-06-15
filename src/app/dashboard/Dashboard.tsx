@@ -68,11 +68,13 @@ export default function Dashboard() {
 			label: 'Мітів організовано',
 			value: organizedMeets.length,
 			color: 'bg-green-100',
+			id: 'organizedMeets',
 		},
 		{
 			label: 'Пропозиції мітів',
 			value: matchesArray.length,
 			color: 'bg-yellow-100',
+			id: 'matches',
 		},
 		{
 			label: 'Досягнень',
@@ -158,18 +160,20 @@ export default function Dashboard() {
 							{/* Stats cards */}
 							<div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
 								{stats.map((stat, i: number) => (
-									<Card key={i} className={`text-center ${stat.color}`}>
-										<CardContent className='py-4'>
-											<div className='text-2xl font-bold mb-1'>
-												{stat.value}
-											</div>
-											<div className='text-sm text-gray-700'>{stat.label}</div>
-										</CardContent>
-									</Card>
+									<Link href={`#${stat.id}`} key={i}>
+										<Card key={i} className={`text-center ${stat.color}`}>
+											<CardContent className='py-4'>
+												<div className='text-2xl font-bold mb-1'>
+													{stat.value}
+												</div>
+												<div className='text-sm text-gray-700'>{stat.label}</div>
+											</CardContent>
+										</Card>
+									</Link>
 								))}
 							</div>
 							{/* Мої міти */}
-							<Card>
+							<Card id='organizedMeets'>
 								<CardHeader className='flex flex-row items-center justify-between pb-2'>
 									<CardTitle>Мої міти</CardTitle>
 
