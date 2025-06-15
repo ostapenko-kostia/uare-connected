@@ -39,13 +39,13 @@ export default function Footer() {
 									Головна
 								</Link>
 								<Link
-									href='/find-meets'
+									href='/meets/search'
 									className='text-text-dark/70 hover:text-blue-700 transition-colors text-sm'
 								>
 									Знайти зустрічі
 								</Link>
 								<Link
-									href='/create-meet'
+									href='/meets/create'
 									className='text-text-dark/70 hover:text-blue-700 transition-colors text-sm'
 								>
 									Створити зустріч

@@ -1,4 +1,5 @@
 import { Quote, Star } from 'lucide-react'
+import Link from 'next/link'
 
 export function Testimonials() {
 	return (
@@ -100,9 +101,11 @@ export function Testimonials() {
 							Приєднуйтеся до спільноти людей, які прагнуть міжкультурного
 							спілкування
 						</p>
-						<button className='bg-blue-300 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-400 transition-colors'>
-							Створити акаунт
-						</button>
+						<Link href='/login'>
+							<button className='bg-blue-300 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-400 transition-colors'>
+								Створити акаунт
+							</button>
+						</Link>
 					</div>
 				</div>
 			</div>
