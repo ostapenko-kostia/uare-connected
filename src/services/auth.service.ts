@@ -43,7 +43,7 @@ class AuthService {
 	getUser(): User & { userInfo: UserInfo } {
 		return typeof window !== 'undefined'
 			? JSON.parse(localStorage.getItem('user') || 'null')
-			: null
+			: {} as User & { userInfo: UserInfo }
 	}
 
 	clearUser() {
