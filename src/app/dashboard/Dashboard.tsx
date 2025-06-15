@@ -172,9 +172,7 @@ export default function Dashboard() {
 							<Card>
 								<CardHeader className='flex flex-row items-center justify-between pb-2'>
 									<CardTitle>Мої міти</CardTitle>
-									<Button variant='outline' size='sm'>
-										Переглянути всі
-									</Button>
+
 								</CardHeader>
 								<CardContent>
 									{meetsLoading ? (
@@ -182,7 +180,7 @@ export default function Dashboard() {
 											<div className='text-gray-400'>Завантаження мітів...</div>
 										</div>
 									) : organizedMeets.length === 0 &&
-									  attendedMeets.length === 0 ? (
+										attendedMeets.length === 0 ? (
 										<div className='flex flex-col items-center justify-center py-8'>
 											<div className='text-gray-400 mb-4'>
 												У вас ще немає мітів
@@ -347,13 +345,11 @@ export default function Dashboard() {
 											? 'Профіль завершено'
 											: 'Заповніть профіль для кращих рекомендацій'}
 									</div>
-									{profileProgress < 100 && (
-										<Link href='/questionnaire'>
-											<Button variant='outline' size='sm' className='w-full'>
-												Заповнити профіль
-											</Button>
-										</Link>
-									)}
+									<Link href='/questionnaire'>
+										<Button variant='outline' size='sm' className='w-full'>
+											Змінити дані
+										</Button>
+									</Link>
 								</CardContent>
 							</Card>
 							{/* Languages */}

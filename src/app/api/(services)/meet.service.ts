@@ -1,5 +1,5 @@
 import { resend } from '@/lib/resend'
-import { JoinRequest, PrismaClient, User } from '@prisma/client'
+import { PrismaClient, User } from '@prisma/client'
 import z from 'zod'
 import { ApiError } from '../(exceptions)/apiError'
 import { matchService } from '../(services)/match.service'

@@ -23,86 +23,17 @@ export default function CreateMeetPage() {
 		tags: [] as string[],
 	})
 	const [newTag, setNewTag] = useState('')
-	const [errors, setErrors] = useState({
-		title: '',
-		language: '',
-		date: '',
-		time: '',
-		tags: '',
-	})
-	const [touched, setTouched] = useState({
-		title: false,
-		language: false,
-		date: false,
-		time: false,
-		tags: false,
-	})
-
-	const validateForm = () => {
-		const newErrors = {
-			title: '',
-			language: '',
-			date: '',
-			time: '',
-			tags: '',
-		}
-
-		if (!formData.title.trim()) {
-			newErrors.title = "Назва зустрічі є обов'язковою"
-		} else if (formData.title.trim().length < 5) {
-			newErrors.title = 'Назва повинна містити мінімум 5 символів'
-		}
-
-		if (!formData.language.trim()) {
-			newErrors.language = "Мова є обов'язковою"
-		}
-
-		if (!formData.date) {
-			newErrors.date = "Дата є обов'язковою"
-		} else {
-			const selectedDate = new Date(formData.date)
-			const today = new Date()
-			today.setHours(0, 0, 0, 0)
-			if (selectedDate < today) {
-				newErrors.date = 'Дата не може бути в минулому'
-			}
-		}
-
-		if (!formData.time) {
-			newErrors.time = "Час є обов'язковим"
-		}
-
-		if (formData.tags.length === 0) {
-			newErrors.tags = 'Додайте хоча б один тег'
-		}
-
-		setErrors(newErrors)
-		return Object.values(newErrors).every(error => error === '')
-	}
 
 	const handleFieldChange = (field: string, value: any) => {
 		setFormData(prev => ({ ...prev, [field]: value }))
-
-		setTouched(prev => ({ ...prev, [field]: true }))
-
-		setTimeout(() => validateForm(), 0)
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 
-		// Позначаємо всі поля як торкнуті
-		setTouched({
-			title: true,
-			language: true,
-			date: true,
-			time: true,
-			tags: true,
-		})
-
-		// Валідуємо форму
-		if (!validateForm()) {
-			toast.error('Будь ласка, виправте помилки у формі')
+		// Basic check for required fields
+		if (!formData.title || !formData.language || !formData.date || !formData.time || formData.tags.length === 0) {
+			toast.error('Будь ласка, заповніть всі обов\'язкові поля')
 			return
 		}
 
@@ -203,16 +134,8 @@ export default function CreateMeetPage() {
 									placeholder='Наприклад: Розмовна практика англійської мови'
 									value={formData.title}
 									onChange={e => handleFieldChange('title', e.target.value)}
-									onBlur={() => setTouched(prev => ({ ...prev, title: true }))}
-									className={`w-full ${
-										touched.title && errors.title
-											? 'border-red-500 focus:border-red-500'
-											: ''
-									}`}
+									className='w-full'
 								/>
-								{touched.title && errors.title && (
-									<p className='text-sm text-red-500 mt-1'>{errors.title}</p>
-								)}
 							</div>
 
 							{/* Language */}
@@ -230,18 +153,8 @@ export default function CreateMeetPage() {
 									placeholder='Наприклад: Англійська, Німецька, Французька'
 									value={formData.language}
 									onChange={e => handleFieldChange('language', e.target.value)}
-									onBlur={() =>
-										setTouched(prev => ({ ...prev, language: true }))
-									}
-									className={`w-full ${
-										touched.language && errors.language
-											? 'border-red-500 focus:border-red-500'
-											: ''
-									}`}
+									className='w-full'
 								/>
-								{touched.language && errors.language && (
-									<p className='text-sm text-red-500 mt-1'>{errors.language}</p>
-								)}
 							</div>
 
 							{/* Date and Time */}
@@ -260,16 +173,8 @@ export default function CreateMeetPage() {
 										min={today}
 										value={formData.date}
 										onChange={e => handleFieldChange('date', e.target.value)}
-										onBlur={() => setTouched(prev => ({ ...prev, date: true }))}
-										className={`w-full ${
-											touched.date && errors.date
-												? 'border-red-500 focus:border-red-500'
-												: ''
-										}`}
+										className='w-full'
 									/>
-									{touched.date && errors.date && (
-										<p className='text-sm text-red-500 mt-1'>{errors.date}</p>
-									)}
 								</div>
 								<div className='space-y-2'>
 									<Label
@@ -284,16 +189,8 @@ export default function CreateMeetPage() {
 										type='time'
 										value={formData.time}
 										onChange={e => handleFieldChange('time', e.target.value)}
-										onBlur={() => setTouched(prev => ({ ...prev, time: true }))}
-										className={`w-full ${
-											touched.time && errors.time
-												? 'border-red-500 focus:border-red-500'
-												: ''
-										}`}
+										className='w-full'
 									/>
-									{touched.time && errors.time && (
-										<p className='text-sm text-red-500 mt-1'>{errors.time}</p>
-									)}
 								</div>
 							</div>
 
@@ -339,12 +236,7 @@ export default function CreateMeetPage() {
 										value={newTag}
 										onChange={e => setNewTag(e.target.value)}
 										onKeyDown={handleKeyPress}
-										onBlur={() => setTouched(prev => ({ ...prev, tags: true }))}
-										className={`flex-1 ${
-											touched.tags && errors.tags
-												? 'border-red-500 focus:border-red-500'
-												: ''
-										}`}
+										className='flex-1'
 									/>
 									<Button
 										type='button'
@@ -389,11 +281,6 @@ export default function CreateMeetPage() {
 									</div>
 								)}
 
-								{/* Помилка валідації */}
-								{touched.tags && errors.tags && (
-									<p className='text-sm text-red-500 mt-1'>{errors.tags}</p>
-								)}
-
 								{/* Загальна підказка */}
 								<p className='text-sm text-gray-500'>
 									Додайте теги, щоб описати рівень складності, тематику або тип
@@ -417,14 +304,7 @@ export default function CreateMeetPage() {
 								>
 									{isLoading ? 'Створення...' : 'Створити зустріч'}
 								</Button>
-								<Button
-									type='button'
-									variant='outline'
-									onClick={() => router.back()}
-									className='px-8'
-								>
-									Скасувати
-								</Button>
+
 							</div>
 						</form>
 					</CardContent>
