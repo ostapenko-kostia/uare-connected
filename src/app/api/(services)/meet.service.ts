@@ -106,7 +106,12 @@ export const meetService = {
 	},
 
 	async getMeetings(): Promise<Meet[]> {
-		const meets = await prisma.meet.findMany()
+		const meets = await prisma.meet.findMany({
+			include: {
+				creator: true,
+				joinRequest: true,
+			},
+		})
 		return meets
 	},
 
@@ -114,6 +119,10 @@ export const meetService = {
 		try {
 			const meet = await prisma.meet.findUnique({
 				where: { id: meetId },
+				include: {
+					creator: true,
+					joinRequest: true,
+				},
 			})
 
 			return meet

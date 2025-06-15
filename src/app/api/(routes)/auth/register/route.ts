@@ -46,6 +46,10 @@ export async function POST(req: NextRequest) {
 			)
 		}
 
+		if (!image) {
+			throw new ApiError('Необхідно завантажити фото', 400)
+		}
+
 		const avatarUrl = await fileService.uploadFile(image)
 
 		const userData = await authService.register({ ...result.data, avatarUrl })

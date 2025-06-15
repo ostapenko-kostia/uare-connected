@@ -5,6 +5,8 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { Provider } from './provider'
 import { Toaster } from 'react-hot-toast'
+import { cookies } from 'next/headers'
+import { TOKEN } from '@/typing/enums'
 
 const geistSans = Geist({
 	variable: '--font-geist-sans',
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
 	description: 'UAre Connected',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode

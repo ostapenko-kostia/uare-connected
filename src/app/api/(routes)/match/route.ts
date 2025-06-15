@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
 				meet: {
 					include: {
 						creator: true,
+						joinRequest: true,
 					},
 				},
 			},
@@ -27,19 +28,11 @@ export async function GET(req: NextRequest) {
 			id: match.meet.id,
 			title: match.meet.title,
 			date: match.meet.date,
-			time: new Date(match.meet.date).toLocaleTimeString([], {
-				hour: '2-digit',
-				minute: '2-digit',
-			}),
-			duration: '30 хв', // Placeholder, adjust as needed
 			language: match.meet.language,
 			tags: match.meet.tags,
-			organizer: {
-				name: match.meet.creator?.firstName || 'Невідомий організатор',
-				avatarUrl: match.meet.creator?.avatarUrl || '',
-			},
+			creator: match.meet.creator,
 			maxMembers: match.meet.maxMembers,
-			currentMembers: 0, // Placeholder, adjust as needed
+			currentMembers: match.meet.joinRequest?.length ?? 0,
 			zoomUrl: match.meet.url,
 		}))
 

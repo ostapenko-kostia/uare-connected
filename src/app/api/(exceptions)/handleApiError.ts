@@ -15,7 +15,7 @@ export async function handleApiError(error: unknown) {
 
 	return NextResponse.json(
 		{
-			message: 'Internal Server Error',
+			message: 'Помилка, спробуйте пізніше',
 		},
 		{ status: 500 }
 	)

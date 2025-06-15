@@ -126,12 +126,14 @@ class AuthService {
 			where: { id: userData.id },
 			include: { userInfo: true },
 		})
-		if (!user)
+
+		if (!user?.id) {
 			throw new ApiError(
 				'Необхідна авторизація',
 				401,
 				'errors.server.unauthorized'
 			)
+		}
 
 		// Creating DTO
 		const userDto = new UserDto(user)

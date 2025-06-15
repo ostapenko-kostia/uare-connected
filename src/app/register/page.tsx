@@ -35,10 +35,36 @@ interface Form {
 
 export default function RegisterPage() {
 	const { mutateAsync, isPending: isLoading } = useRegister()
-	const { register, handleSubmit, setValue } = useForm<Form>()
+	const { register, handleSubmit, getValues, setValue, watch } = useForm<Form>()
 	const [showPassword, setShowPassword] = useState(false)
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 	const [agreeToTerms, setAgreeToTerms] = useState(false)
+	const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+	const avatarFiles = watch('avatar')
+
+	// Helper function to format file size
+	const formatFileSize = (bytes: number): string => {
+		if (bytes === 0) return '0 Bytes'
+		const k = 1024
+		const sizes = ['Bytes', 'KB', 'MB', 'GB']
+		const i = Math.floor(Math.log(bytes) / Math.log(k))
+		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+	}
+
+	// Function to remove selected file
+	const removeFile = () => {
+		setSelectedFile(null)
+		setValue('avatar', undefined as any)
+	}
+
+	// Handle file selection
+	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0]
+		if (file) {
+			setSelectedFile(file)
+		}
+	}
 
 	const onSubmit = async (data: Form) => {
 		if (data.password !== data.confirmPassword) {
@@ -58,7 +84,7 @@ export default function RegisterPage() {
 				lastName: data.lastName,
 				password: data.password,
 			},
-			avatar: data.avatar?.[0],
+			avatar: data.avatar?.[0] || selectedFile,
 		})
 	}
 
@@ -78,6 +104,28 @@ export default function RegisterPage() {
 					<CardContent>
 						{/* Avatar Upload Section */}
 						<div className='mb-6 flex flex-col items-center space-y-4'>
+							{selectedFile && (
+								<div className='w-full max-w-xs bg-slate-50 dark:bg-slate-700 rounded-lg p-4 text-center space-y-2'>
+									<div className='flex items-center justify-center space-x-2 text-slate-700 dark:text-slate-300'>
+										<Upload className='w-4 h-4 text-green-500' />
+										<span className='text-sm font-medium'>
+											Файл завантажено
+										</span>
+									</div>
+									<div className='text-xs text-slate-600 dark:text-slate-400'>
+										<div className='truncate'>{selectedFile.name}</div>
+										<div>{formatFileSize(selectedFile.size)}</div>
+									</div>
+									<button
+										type='button'
+										onClick={removeFile}
+										className='text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 flex items-center justify-center space-x-1'
+									>
+										<X className='w-3 h-3' />
+										<span>Видалити</span>
+									</button>
+								</div>
+							)}
 							<div className='text-center'>
 								<label
 									htmlFor='avatar'
@@ -90,7 +138,9 @@ export default function RegisterPage() {
 									id='avatar'
 									type='file'
 									accept='image/*'
-									{...register('avatar')}
+									{...register('avatar', {
+										onChange: handleFileChange,
+									})}
 									className='hidden'
 								/>
 								<p className='text-xs text-slate-500 dark:text-slate-400 mt-1'>

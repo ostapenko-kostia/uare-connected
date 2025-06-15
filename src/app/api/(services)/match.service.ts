@@ -49,7 +49,7 @@ class MatchService {
 
 	async sendNotifications(meet: Meet, matchedUsers: string[]) {
 		try {
-			const meetLink = meet.url
+			const meetLink = `${process.env.NEXT_PUBLIC_APP_URL}/meets/${meet.id}`
 
 			await Promise.all(
 				matchedUsers.map(async userId => {

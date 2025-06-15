@@ -3,32 +3,42 @@
 import { Container } from '@/components/shared/container'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useEffect, useState } from 'react'
+import { useLogout } from '@/hooks/useAuth'
+import { useMatches } from '@/hooks/useMatches'
+import { useGetMeets } from '@/hooks/useMeets'
+import { useUser } from '@/hooks/useUser'
 import { MeetCard } from './MeetCard'
+import { useLayoutEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
-	const [user, setUser] = useState<any>(null)
-
-	useEffect(() => {
-		setUser(
-			typeof window !== 'undefined'
-				? JSON.parse(localStorage.getItem('user') || 'null')
-				: null
-		)
-	}, [])
+	const { data: user, isLoading: userLoading, error: userError } = useUser()
+	const { data: meets, isLoading: meetsLoading } = useGetMeets()
+	const { data: matches, isLoading: matchesLoading } = useMatches()
+	const { mutate: logout, isPending: isLoggingOut } = useLogout()
+	const router = useRouter()
 
 	// Calculate profile progress based on userInfo fields
 	const calculateProfileProgress = () => {
 		if (!user?.userInfo) return 0
-		const fields = ['age', 'gender', 'interests', 'languages']
-		const completedFields = fields.filter(field => {
-			if (field === 'interests' || field === 'languages') {
-				return user.userInfo[field]?.length > 0
-			}
-			return !!user.userInfo[field]
-		})
-		return Math.round((completedFields.length / fields.length) * 100)
+		let completedFields = 0
+		const totalFields = 4
+
+		if (user.userInfo.age) completedFields++
+		if (user.userInfo.gender) completedFields++
+		if (user.userInfo.interests?.length > 0) completedFields++
+		if (user.userInfo.languages?.length > 0) completedFields++
+
+		return Math.round((completedFields / totalFields) * 100)
 	}
+
+	useLayoutEffect(() => {
+		if (!userLoading) {
+			if (calculateProfileProgress() !== 100) {
+				router.push('/questionnaire')
+			}
+		}
+	}, [user])
 
 	const profileProgress = calculateProfileProgress()
 	const languages =
@@ -38,35 +48,83 @@ export default function Dashboard() {
 		})) || []
 	const interests = user?.userInfo?.interests || []
 
-	// Stats based on real data
+	// Calculate real stats based on actual data
+	const meetsArray = Array.isArray(meets) ? meets : []
+	const matchesArray = Array.isArray(matches) ? matches : []
+
+	const organizedMeets = meetsArray.filter(
+		(meet: any) => meet.organizerId === user?.id
+	)
+	const attendedMeets = meetsArray.filter((meet: any) =>
+		meet.attendees?.some((attendee: any) => attendee.userId === user?.id)
+	)
+
 	const stats = [
-		{ label: 'Мітів відвідано', value: 0, color: 'bg-blue-100' },
-		{ label: 'Мітів організовано', value: 0, color: 'bg-green-100' },
+		{
+			label: 'Мітів відвідано',
+			value: attendedMeets.length,
+			color: 'bg-blue-100',
+		},
+		{
+			label: 'Мітів організовано',
+			value: organizedMeets.length,
+			color: 'bg-green-100',
+		},
 		{
 			label: 'Пропозиції мітів',
-			value: user?.userInfo?.languages?.length || 0,
+			value: matchesArray.length,
 			color: 'bg-yellow-100',
 		},
-		{ label: 'Досягнень', value: 0, color: 'bg-red-100' },
-	]
-
-	// MOCK: Replace with real fetch logic for user matches
-	const matches = [
 		{
-			id: '1',
-			title: 'Давай поговоримо про футбол',
-			date: '15.06.25',
-			time: '10:00',
-			duration: '30 хв',
-			language: 'English',
-			description: 'огляд футбольного матчу барселони',
-			tags: ['футбол', 'англійська'],
-			organizer: { name: 'Невідомий організатор' },
-			maxMembers: 5,
-			currentMembers: 0,
-			zoomUrl: '',
+			label: 'Досягнень',
+			value: calculateAchievements(),
+			color: 'bg-red-100',
 		},
 	]
+
+	// Calculate achievements based on user activity
+	function calculateAchievements() {
+		let achievements = 0
+		if (profileProgress >= 100) achievements++
+		if (organizedMeets.length >= 1) achievements++
+		if (attendedMeets.length >= 5) achievements++
+		if (languages.length >= 2) achievements++
+		return achievements
+	}
+
+	// Get upcoming meets (next 7 days)
+	const upcomingMeets = meetsArray.filter((meet: any) => {
+		const meetDate = new Date(meet.scheduledAt || meet.date)
+		const now = new Date()
+		const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+		return meetDate >= now && meetDate <= weekFromNow
+	})
+
+	if (userLoading) {
+		return (
+			<div className='bg-[#e5e1d8] min-h-screen py-6 flex items-center justify-center'>
+				<div className='text-center'>
+					<div className='text-lg font-medium'>Завантаження...</div>
+					<div className='text-sm text-gray-600'>
+						Отримання даних користувача
+					</div>
+				</div>
+			</div>
+		)
+	}
+
+	if (userError || !user) {
+		return (
+			<div className='bg-[#e5e1d8] min-h-screen py-6 flex items-center justify-center'>
+				<div className='text-center'>
+					<div className='text-lg font-medium text-red-600'>Помилка</div>
+					<div className='text-sm text-gray-600'>
+						Не вдалося завантажити дані користувача
+					</div>
+				</div>
+			</div>
+		)
+	}
 
 	return (
 		<div className='bg-[#e5e1d8] min-h-screen py-6'>
@@ -77,7 +135,7 @@ export default function Dashboard() {
 						<div className='flex-1 flex flex-col gap-6'>
 							{/* Welcome + stats */}
 							<div className='bg-blue-200 rounded-xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6'>
-								<div>
+								<div className='flex-1'>
 									<div className='text-2xl font-semibold text-white mb-1'>
 										Вітаємо, {user?.firstName || 'користувач'}!
 									</div>
@@ -86,11 +144,22 @@ export default function Dashboard() {
 										сьогодні.
 									</div>
 								</div>
-								<div className='flex flex-col items-center justify-center bg-white/40 rounded-xl px-8 py-4'>
-									<div className='text-3xl font-bold text-blue-900'>
-										{user?.balance || 0}
+								<div className='flex items-center gap-4'>
+									<div className='flex flex-col items-center justify-center bg-white/40 rounded-xl px-8 py-4'>
+										<div className='text-3xl font-bold text-blue-900'>
+											{user?.balance || 0}
+										</div>
+										<div className='text-blue-900 font-medium'>говорюшок</div>
 									</div>
-									<div className='text-blue-900 font-medium'>говорюшок</div>
+									<Button
+										variant='outline'
+										size='sm'
+										onClick={() => logout()}
+										disabled={isLoggingOut}
+										className='bg-white/20 border-white/30 text-white hover:bg-white/30'
+									>
+										{isLoggingOut ? 'Виходимо...' : 'Вийти'}
+									</Button>
 								</div>
 							</div>
 							{/* Stats cards */}
@@ -115,14 +184,26 @@ export default function Dashboard() {
 									</Button>
 								</CardHeader>
 								<CardContent>
-									<div className='flex flex-col items-center justify-center py-8'>
-										<div className='text-gray-400 mb-4'>
-											Немає найближчих мітів
-											<br />
-											Знайдіть цікаві міти або створіть власний
+									{meetsLoading ? (
+										<div className='flex items-center justify-center py-8'>
+											<div className='text-gray-400'>Завантаження мітів...</div>
 										</div>
-										<Button>Створити міт</Button>
-									</div>
+									) : upcomingMeets.length === 0 ? (
+										<div className='flex flex-col items-center justify-center py-8'>
+											<div className='text-gray-400 mb-4'>
+												Немає найближчих мітів
+												<br />
+												Знайдіть цікаві міти або створіть власний
+											</div>
+											<Button>Створити міт</Button>
+										</div>
+									) : (
+										<div className='flex flex-col gap-4'>
+											{upcomingMeets.slice(0, 3).map((meet: any) => (
+												<MeetCard key={meet.id} meet={meet} />
+											))}
+										</div>
+									)}
 								</CardContent>
 							</Card>
 						</div>
@@ -151,7 +232,9 @@ export default function Dashboard() {
 										/>
 									</div>
 									<div className='text-green-700 text-xs font-medium'>
-										Профіль завершено
+										{profileProgress === 100
+											? 'Профіль завершено'
+											: 'Заповніть профіль для кращих рекомендацій'}
 									</div>
 								</CardContent>
 							</Card>
@@ -161,20 +244,26 @@ export default function Dashboard() {
 									<CardTitle className='text-base'>Мої мови</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className='flex flex-col gap-2'>
-										{languages.map(
-											(lang: { name: string; level: string }, i: number) => (
-												<div key={i} className='flex items-center gap-2'>
-													<span className='bg-gray-100 rounded px-2 py-0.5 text-xs font-medium'>
-														{lang.name}
-													</span>
-													<span className='text-xs text-gray-500'>
-														{lang.level}
-													</span>
-												</div>
-											)
-										)}
-									</div>
+									{languages.length === 0 ? (
+										<div className='text-xs text-gray-400'>
+											Додайте мови до профілю
+										</div>
+									) : (
+										<div className='flex flex-col gap-2'>
+											{languages.map(
+												(lang: { name: string; level: string }, i: number) => (
+													<div key={i} className='flex items-center gap-2'>
+														<span className='bg-gray-100 rounded px-2 py-0.5 text-xs font-medium'>
+															{lang.name}
+														</span>
+														<span className='text-xs text-gray-500'>
+															{lang.level}
+														</span>
+													</div>
+												)
+											)}
+										</div>
+									)}
 								</CardContent>
 							</Card>
 							{/* Interests */}
@@ -183,16 +272,22 @@ export default function Dashboard() {
 									<CardTitle className='text-base'>Мої інтереси</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className='flex flex-wrap gap-2'>
-										{interests.map((interest: string, i: number) => (
-											<span
-												key={i}
-												className='bg-gray-100 rounded px-2 py-0.5 text-xs font-medium'
-											>
-												{interest}
-											</span>
-										))}
-									</div>
+									{interests.length === 0 ? (
+										<div className='text-xs text-gray-400'>
+											Додайте інтереси до профілю
+										</div>
+									) : (
+										<div className='flex flex-wrap gap-2'>
+											{interests.map((interest: string, i: number) => (
+												<span
+													key={i}
+													className='bg-gray-100 rounded px-2 py-0.5 text-xs font-medium'
+												>
+													{interest}
+												</span>
+											))}
+										</div>
+									)}
 								</CardContent>
 							</Card>
 							{/* AI recommendations */}
@@ -213,23 +308,6 @@ export default function Dashboard() {
 									</Button>
 								</CardContent>
 							</Card>
-							{/* Matches section */}
-							<Card>
-								<CardHeader>
-									<CardTitle className='text-base'>Ваші матчі</CardTitle>
-								</CardHeader>
-								<CardContent>
-									{matches.length === 0 ? (
-										<div className='text-xs text-gray-400'>Немає матчів</div>
-									) : (
-										<div className='flex flex-col gap-4'>
-											{matches.map(meet => (
-												<MeetCard key={meet.id} meet={meet} />
-											))}
-										</div>
-									)}
-								</CardContent>
-							</Card>
 						</div>
 					</div>
 					<div className='row-start-2 col-start-1'>
@@ -238,11 +316,13 @@ export default function Dashboard() {
 								<CardTitle className='text-base'>Мої метчі</CardTitle>
 							</CardHeader>
 							<CardContent>
-								{matches.length === 0 ? (
+								{matchesLoading ? (
+									<div className='text-xs text-gray-400'>Завантаження...</div>
+								) : matchesArray.length === 0 ? (
 									<div className='text-xs text-gray-400'>Немає метчів</div>
 								) : (
 									<div className='flex flex-col gap-4'>
-										{matches.map(meet => (
+										{matchesArray.map((meet: any) => (
 											<MeetCard key={meet.id} meet={meet} />
 										))}
 									</div>

@@ -93,10 +93,12 @@ model JoinRequest {
   userId String
 
   meet   Meet   @relation(references: [id], fields: [meetId])
-  meetId String @unique
+  meetId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, meetId])
 }
 
 model Match {

@@ -19,6 +19,22 @@ class AuthService {
 		Cookies.remove(TOKEN.ACCESS_TOKEN)
 	}
 
+	getRefreshToken() {
+		return Cookies.get(TOKEN.REFRESH_TOKEN)
+	}
+
+	setRefreshToken(token: string) {
+		Cookies.set(TOKEN.REFRESH_TOKEN, token, {
+			expires: 30, // 30 days
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'lax',
+		})
+	}
+
+	clearRefreshToken() {
+		Cookies.remove(TOKEN.REFRESH_TOKEN)
+	}
+
 	saveUser(user: User) {
 		typeof window !== 'undefined' &&
 			localStorage.setItem('user', JSON.stringify(user))
@@ -34,6 +50,14 @@ class AuthService {
 		typeof window !== 'undefined' && localStorage.removeItem('user')
 	}
 
+	isAuthenticated(): boolean {
+		const accessToken = this.getAccessToken()
+		const refreshToken = this.getRefreshToken()
+		const user = this.getUser()
+
+		return !!(accessToken && refreshToken && user)
+	}
+
 	async login(email: string, password: string) {
 		try {
 			const res = await api.post<IAuthResponse>('/auth/login', {
@@ -42,6 +66,7 @@ class AuthService {
 			})
 			if (res?.status === 200) {
 				this.setAccessToken(res.data.accessToken)
+				// Note: refresh token is set by the server via httpOnly cookie
 				typeof window !== 'undefined' &&
 					localStorage.setItem('user', JSON.stringify(res.data.user))
 				return res
@@ -78,6 +103,7 @@ class AuthService {
 
 		if (res?.status === 200) {
 			this.setAccessToken(res.data.accessToken)
+			// Note: refresh token is set by the server via httpOnly cookie
 			typeof window !== 'undefined' &&
 				localStorage.setItem('user', JSON.stringify(res.data.user))
 			return res
@@ -88,11 +114,13 @@ class AuthService {
 	async logout() {
 		try {
 			await api.post('/auth/logout')
-			this.clearAccessToken()
-			typeof window !== 'undefined' && localStorage.removeItem('user')
 		} catch (error) {
 			console.error('Logout error:', error)
-			throw error
+		} finally {
+			// Always clear local tokens and user data
+			this.clearAccessToken()
+			this.clearRefreshToken()
+			this.clearUser()
 		}
 	}
 
@@ -101,12 +129,19 @@ class AuthService {
 			const res = await api.post<IAuthResponse>('/auth/refresh')
 			if (res?.status === 200) {
 				this.setAccessToken(res.data.accessToken)
+				// Update user data if provided
+				if (res.data.user) {
+					typeof window !== 'undefined' &&
+						localStorage.setItem('user', JSON.stringify(res.data.user))
+				}
 				return res
 			}
 			throw new Error('Помилка оновлення токену')
 		} catch (error) {
+			// Clear all auth data on refresh failure
 			this.clearAccessToken()
-			typeof window !== 'undefined' && localStorage.removeItem('user')
+			this.clearRefreshToken()
+			this.clearUser()
 			throw error
 		}
 	}

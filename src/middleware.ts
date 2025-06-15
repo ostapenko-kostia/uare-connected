@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { TOKEN } from './typing/enums'
 
 // Protected routes that require authentication
-const protectedRoutes = ['/dashboard', '/meets']
+const protectedRoutes = ['/dashboard', '/meets', '/questionnaire']
 
 // Public routes that don't require authentication
 const loginRoutes = ['/login', '/register']

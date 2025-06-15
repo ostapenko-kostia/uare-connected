@@ -141,7 +141,7 @@ function HeaderComponent() {
 			{/* Mobile Menu */}
 			{isMenuOpen && (
 				<div className='md:hidden bg-white border-t border-gray-100'>
-					<nav className='px-4 py-4 space-y-4'>{renderNavigation(true)}</nav>
+					<nav className='px-4 py-4 space-y-4 flex flex-col'>{renderNavigation(true)}</nav>
 				</div>
 			)}
 		</header>
