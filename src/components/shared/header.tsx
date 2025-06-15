@@ -1,11 +1,11 @@
 'use client'
 
 import { authService } from '@/services/auth.service'
-import { Menu, Plus, Search, User, X } from 'lucide-react'
+import { LogOut, Menu, Plus, Search, User, X } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '../ui/button'
 
@@ -72,13 +72,34 @@ const LoginLink = () => (
 	</NavLink>
 )
 
+const LogoutButton = ({ onClick }: { onClick: () => void }) => (
+	<button
+		onClick={onClick}
+		className='text-[#1f1f1f] hover:text-[#97c2ec] transition-colors flex items-center gap-2'
+	>
+		<LogOut className='w-5 h-5' />
+		<span>Вийти</span>
+	</button>
+)
+
 function HeaderComponent() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false)
 	const pathname = usePathname()
+	const router = useRouter()
 	const user = authService.getUser()
 
 	const isMeetOrDashboard =
 		pathname.includes('/dashboard') || pathname.includes('/meets')
+
+	const handleLogout = async () => {
+		try {
+			await authService.logout()
+			router.push('/')
+			router.refresh()
+		} catch (error) {
+			console.error('Logout error:', error)
+		}
+	}
 
 	const renderNavigation = (isMobile = false) => {
 		const baseClass = isMobile ? 'block' : ''
@@ -89,6 +110,7 @@ function HeaderComponent() {
 					<>
 						<MeetLinks />
 						<UserProfileLink user={user} />
+						<LogoutButton onClick={handleLogout} />
 					</>
 				)
 			}
@@ -96,6 +118,7 @@ function HeaderComponent() {
 				<>
 					<BasicLinks />
 					<UserProfileLink user={user} />
+					<LogoutButton onClick={handleLogout} />
 				</>
 			)
 		}
@@ -141,7 +164,9 @@ function HeaderComponent() {
 			{/* Mobile Menu */}
 			{isMenuOpen && (
 				<div className='md:hidden bg-white border-t border-gray-100'>
-					<nav className='px-4 py-4 space-y-4 flex flex-col'>{renderNavigation(true)}</nav>
+					<nav className='px-4 py-4 space-y-4 flex flex-col'>
+						{renderNavigation(true)}
+					</nav>
 				</div>
 			)}
 		</header>

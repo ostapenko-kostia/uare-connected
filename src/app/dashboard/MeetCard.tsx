@@ -63,7 +63,6 @@ export const MeetCard: React.FC<MeetCardProps> = ({ meet }) => {
 					<div className='font-semibold text-sm'>
 						{meet.creator?.firstName || 'Невідомий організатор'}
 					</div>
-					<div className='text-xs text-gray-400'>Не вказано</div>
 				</div>
 				<div className='flex-1' />
 				<Link href={`/meets/${meet.id}`}>

@@ -13,6 +13,7 @@ import { useLogin } from '@/hooks/useAuth'
 import { Eye, EyeOff, LoaderIcon, Lock, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
+import { useState } from 'react'
 
 interface Form {
 	email: string
@@ -22,6 +23,7 @@ interface Form {
 export default function LoginPage() {
 	const { mutateAsync, isPending: isLoading } = useLogin()
 	const { register, handleSubmit } = useForm<Form>()
+	const [isShowPassword, setIsShowPassword] = useState(false)
 
 	const login = async (data: Form) => {
 		try {
@@ -86,9 +88,10 @@ export default function LoginPage() {
 									/>
 									<button
 										type='button'
+										onClick={() => setIsShowPassword(!isShowPassword)}
 										className='absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600'
 									>
-										{true ? (
+										{isShowPassword ? (
 											<EyeOff className='h-4 w-4' />
 										) : (
 											<Eye className='h-4 w-4' />

@@ -11,7 +11,7 @@ export function useLogin() {
 		onSuccess: response => {
 			if (response?.data?.user) {
 				authService.saveUser(response.data.user)
-				window.location.href = '/'
+				window.location.href = '/dashboard'
 			}
 		},
 	})
@@ -33,7 +33,7 @@ export function useRegister() {
 		onSuccess: response => {
 			if (response?.data?.user) {
 				authService.saveUser(response.data.user)
-				window.location.href = '/'
+				window.location.href = '/questionnaire'
 			}
 		},
 	})

@@ -35,13 +35,16 @@ interface Form {
 
 export default function RegisterPage() {
 	const { mutateAsync, isPending: isLoading } = useRegister()
-	const { register, handleSubmit, getValues, setValue, watch } = useForm<Form>()
+	const {
+		register,
+		handleSubmit,
+		setValue,
+		formState: { errors, isValid },
+	} = useForm<Form>({ mode: 'onChange' })
 	const [showPassword, setShowPassword] = useState(false)
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 	const [agreeToTerms, setAgreeToTerms] = useState(false)
 	const [selectedFile, setSelectedFile] = useState<File | null>(null)
-
-	const avatarFiles = watch('avatar')
 
 	// Helper function to format file size
 	const formatFileSize = (bytes: number): string => {
@@ -164,11 +167,21 @@ export default function RegisterPage() {
 											id='firstName'
 											type='text'
 											placeholder="Ваше ім'я"
-											{...register('firstName')}
-											className='pl-10 h-11'
-											required
+											{...register('firstName', {
+												required: "Ім'я є обов'язковим",
+												minLength: {
+													value: 2,
+													message: "Ім'я повинно містити мінімум 2 символи",
+												},
+											})}
+											className={`pl-10 h-11 ${errors.firstName ? 'border-red-500 focus:border-red-500' : ''}`}
 										/>
 									</div>
+									{errors.firstName && (
+										<p className='text-sm text-red-500 mt-1'>
+											{errors.firstName.message}
+										</p>
+									)}
 								</div>
 
 								<div className='space-y-2'>

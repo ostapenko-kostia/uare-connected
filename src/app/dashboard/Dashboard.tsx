@@ -3,19 +3,18 @@
 import { Container } from '@/components/shared/container'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useLogout } from '@/hooks/useAuth'
 import { useMatches } from '@/hooks/useMatches'
 import { useGetMeets } from '@/hooks/useMeets'
 import { useUser } from '@/hooks/useUser'
 import { MeetCard } from './MeetCard'
 import { useLayoutEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function Dashboard() {
 	const { data: user, isLoading: userLoading, error: userError } = useUser()
 	const { data: meets, isLoading: meetsLoading } = useGetMeets()
 	const { data: matches, isLoading: matchesLoading } = useMatches()
-	const { mutate: logout, isPending: isLoggingOut } = useLogout()
 	const router = useRouter()
 
 	// Calculate profile progress based on userInfo fields
@@ -151,16 +150,10 @@ export default function Dashboard() {
 										</div>
 										<div className='text-blue-900 font-medium'>говорюшок</div>
 									</div>
-									<Button
-										variant='outline'
-										size='sm'
-										onClick={() => logout()}
-										disabled={isLoggingOut}
-										className='bg-white/20 border-white/30 text-white hover:bg-white/30'
-									>
-										{isLoggingOut ? 'Виходимо...' : 'Вийти'}
-									</Button>
 								</div>
+								<Link href='/meets/create'>
+									<Button>Створити міт</Button>
+								</Link>
 							</div>
 							{/* Stats cards */}
 							<div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
@@ -195,7 +188,9 @@ export default function Dashboard() {
 												<br />
 												Знайдіть цікаві міти або створіть власний
 											</div>
-											<Button>Створити міт</Button>
+											<Link href='/meets/create'>
+												<Button>Створити міт</Button>
+											</Link>
 										</div>
 									) : (
 										<div className='flex flex-col gap-4'>

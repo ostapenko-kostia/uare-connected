@@ -23,9 +23,89 @@ export default function CreateMeetPage() {
 		tags: [] as string[],
 	})
 	const [newTag, setNewTag] = useState('')
+	const [errors, setErrors] = useState({
+		title: '',
+		language: '',
+		date: '',
+		time: '',
+		tags: '',
+	})
+	const [touched, setTouched] = useState({
+		title: false,
+		language: false,
+		date: false,
+		time: false,
+		tags: false,
+	})
+
+	const validateForm = () => {
+		const newErrors = {
+			title: '',
+			language: '',
+			date: '',
+			time: '',
+			tags: '',
+		}
+
+		if (!formData.title.trim()) {
+			newErrors.title = "Назва зустрічі є обов'язковою"
+		} else if (formData.title.trim().length < 5) {
+			newErrors.title = 'Назва повинна містити мінімум 5 символів'
+		}
+
+		if (!formData.language.trim()) {
+			newErrors.language = "Мова є обов'язковою"
+		}
+
+		if (!formData.date) {
+			newErrors.date = "Дата є обов'язковою"
+		} else {
+			const selectedDate = new Date(formData.date)
+			const today = new Date()
+			today.setHours(0, 0, 0, 0)
+			if (selectedDate < today) {
+				newErrors.date = 'Дата не може бути в минулому'
+			}
+		}
+
+		if (!formData.time) {
+			newErrors.time = "Час є обов'язковим"
+		}
+
+		if (formData.tags.length === 0) {
+			newErrors.tags = 'Додайте хоча б один тег'
+		}
+
+		setErrors(newErrors)
+		return Object.values(newErrors).every(error => error === '')
+	}
+
+	const handleFieldChange = (field: string, value: any) => {
+		setFormData(prev => ({ ...prev, [field]: value }))
+
+		setTouched(prev => ({ ...prev, [field]: true }))
+
+		setTimeout(() => validateForm(), 0)
+	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
+
+		// Позначаємо всі поля як торкнуті
+		setTouched({
+			title: true,
+			language: true,
+			date: true,
+			time: true,
+			tags: true,
+		})
+
+		// Валідуємо форму
+		if (!validateForm()) {
+			toast.error('Будь ласка, виправте помилки у формі')
+			return
+		}
+
 		setIsLoading(true)
 
 		try {
@@ -42,7 +122,7 @@ export default function CreateMeetPage() {
 
 			createMeet(meetData, {
 				onSuccess: () => {
-					toast.success('Зустрічь успішно створено!')
+					toast.success('Зустрічу успішно створено!')
 					router.push('/meets/search')
 					setIsLoading(false)
 				},
@@ -122,12 +202,17 @@ export default function CreateMeetPage() {
 									type='text'
 									placeholder='Наприклад: Розмовна практика англійської мови'
 									value={formData.title}
-									onChange={e =>
-										setFormData(prev => ({ ...prev, title: e.target.value }))
-									}
-									className='w-full'
-									required
+									onChange={e => handleFieldChange('title', e.target.value)}
+									onBlur={() => setTouched(prev => ({ ...prev, title: true }))}
+									className={`w-full ${
+										touched.title && errors.title
+											? 'border-red-500 focus:border-red-500'
+											: ''
+									}`}
 								/>
+								{touched.title && errors.title && (
+									<p className='text-sm text-red-500 mt-1'>{errors.title}</p>
+								)}
 							</div>
 
 							{/* Language */}
@@ -144,12 +229,19 @@ export default function CreateMeetPage() {
 									type='text'
 									placeholder='Наприклад: Англійська, Німецька, Французька'
 									value={formData.language}
-									onChange={e =>
-										setFormData(prev => ({ ...prev, language: e.target.value }))
+									onChange={e => handleFieldChange('language', e.target.value)}
+									onBlur={() =>
+										setTouched(prev => ({ ...prev, language: true }))
 									}
-									className='w-full'
-									required
+									className={`w-full ${
+										touched.language && errors.language
+											? 'border-red-500 focus:border-red-500'
+											: ''
+									}`}
 								/>
+								{touched.language && errors.language && (
+									<p className='text-sm text-red-500 mt-1'>{errors.language}</p>
+								)}
 							</div>
 
 							{/* Date and Time */}
@@ -167,12 +259,17 @@ export default function CreateMeetPage() {
 										type='date'
 										min={today}
 										value={formData.date}
-										onChange={e =>
-											setFormData(prev => ({ ...prev, date: e.target.value }))
-										}
-										className='w-full'
-										required
+										onChange={e => handleFieldChange('date', e.target.value)}
+										onBlur={() => setTouched(prev => ({ ...prev, date: true }))}
+										className={`w-full ${
+											touched.date && errors.date
+												? 'border-red-500 focus:border-red-500'
+												: ''
+										}`}
 									/>
+									{touched.date && errors.date && (
+										<p className='text-sm text-red-500 mt-1'>{errors.date}</p>
+									)}
 								</div>
 								<div className='space-y-2'>
 									<Label
@@ -186,12 +283,17 @@ export default function CreateMeetPage() {
 										id='time'
 										type='time'
 										value={formData.time}
-										onChange={e =>
-											setFormData(prev => ({ ...prev, time: e.target.value }))
-										}
-										className='w-full'
-										required
+										onChange={e => handleFieldChange('time', e.target.value)}
+										onBlur={() => setTouched(prev => ({ ...prev, time: true }))}
+										className={`w-full ${
+											touched.time && errors.time
+												? 'border-red-500 focus:border-red-500'
+												: ''
+										}`}
 									/>
+									{touched.time && errors.time && (
+										<p className='text-sm text-red-500 mt-1'>{errors.time}</p>
+									)}
 								</div>
 							</div>
 
@@ -211,10 +313,10 @@ export default function CreateMeetPage() {
 									max='20'
 									value={formData.maxMembers}
 									onChange={e =>
-										setFormData(prev => ({
-											...prev,
-											maxMembers: parseInt(e.target.value) || 5,
-										}))
+										handleFieldChange(
+											'maxMembers',
+											parseInt(e.target.value) || 5
+										)
 									}
 									className='w-full'
 								/>
@@ -237,7 +339,12 @@ export default function CreateMeetPage() {
 										value={newTag}
 										onChange={e => setNewTag(e.target.value)}
 										onKeyDown={handleKeyPress}
-										className='flex-1'
+										onBlur={() => setTouched(prev => ({ ...prev, tags: true }))}
+										className={`flex-1 ${
+											touched.tags && errors.tags
+												? 'border-red-500 focus:border-red-500'
+												: ''
+										}`}
 									/>
 									<Button
 										type='button'
@@ -249,6 +356,19 @@ export default function CreateMeetPage() {
 										<Plus className='w-4 h-4' />
 									</Button>
 								</div>
+
+								{/* Підказка для введення тегів */}
+								{newTag.trim() && !formData.tags.includes(newTag.trim()) && (
+									<div className='text-sm text-blue-600 bg-blue-50 border border-blue-200 rounded-md p-2 flex items-center gap-2'>
+										<span>💡</span>
+										<span>
+											Натисніть кнопку <strong>+</strong> або клавішу{' '}
+											<strong>Enter</strong>, щоб додати тег "{newTag.trim()}"
+										</span>
+									</div>
+								)}
+
+								{/* Показ доданих тегів */}
 								{formData.tags.length > 0 && (
 									<div className='flex flex-wrap gap-2 mt-2'>
 										{formData.tags.map((tag, index) => (
@@ -268,9 +388,16 @@ export default function CreateMeetPage() {
 										))}
 									</div>
 								)}
+
+								{/* Помилка валідації */}
+								{touched.tags && errors.tags && (
+									<p className='text-sm text-red-500 mt-1'>{errors.tags}</p>
+								)}
+
+								{/* Загальна підказка */}
 								<p className='text-sm text-gray-500'>
 									Додайте теги, щоб описати рівень складності, тематику або тип
-									зустрічі
+									зустрічі. Натисніть Enter або кнопку + для додавання.
 								</p>
 							</div>
 
@@ -288,7 +415,7 @@ export default function CreateMeetPage() {
 									}
 									className='flex-1'
 								>
-									{isLoading ? 'Створення...' : 'Створити зустрічу'}
+									{isLoading ? 'Створення...' : 'Створити зустріч'}
 								</Button>
 								<Button
 									type='button'
@@ -317,8 +444,7 @@ export default function CreateMeetPage() {
 									Назва зустрічі
 								</h4>
 								<p>
-									Зробіть назву зрозумілою та привабливою. Вкажіть рівень
-									складності.
+									Зробіть назву зрозумілою та привабливою
 								</p>
 							</div>
 							<div>

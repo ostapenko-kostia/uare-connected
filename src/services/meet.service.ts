@@ -42,7 +42,7 @@ class MeetService {
 	}
 
 	async joinMeet(meetId: string) {
-		const response = await api.post(`/meets/${meetId}/join`)
+		const response = await api.post(`/meets/join/${meetId}`)
 		return response.data
 	}
 }
