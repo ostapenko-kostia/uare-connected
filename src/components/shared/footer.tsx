@@ -34,25 +34,25 @@ export default function Footer() {
 							<div className='flex max-sm:flex-col gap-10'>
 								<Link
 									href='/'
-									className='text-text-dark/70 hover:text-accent transition-colors text-sm'
+									className='text-text-dark/70 hover:text-blue-700 transition-colors text-sm'
 								>
 									Головна
 								</Link>
 								<Link
 									href='/find-meets'
-									className='text-text-dark/70 hover:text-accent transition-colors text-sm'
+									className='text-text-dark/70 hover:text-blue-700 transition-colors text-sm'
 								>
 									Знайти зустрічі
 								</Link>
 								<Link
 									href='/create-meet'
-									className='text-text-dark/70 hover:text-accent transition-colors text-sm'
+									className='text-text-dark/70 hover:text-blue-700 transition-colors text-sm'
 								>
 									Створити зустріч
 								</Link>
 								<Link
 									href='/contact'
-									className='text-text-dark/70 hover:text-accent transition-colors text-sm'
+									className='text-text-dark/70 hover:text-blue-700 transition-colors text-sm'
 								>
 									Контакти
 								</Link>

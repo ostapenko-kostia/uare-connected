@@ -178,7 +178,7 @@ export default function Dashboard() {
 							{/* Nearest meets */}
 							<Card>
 								<CardHeader className='flex flex-row items-center justify-between pb-2'>
-									<CardTitle>Найближчі мітинги</CardTitle>
+									<CardTitle>Найближчі міти</CardTitle>
 									<Button variant='outline' size='sm'>
 										Знайти більше
 									</Button>
