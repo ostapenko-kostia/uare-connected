@@ -59,6 +59,8 @@ class MatchService {
 					const email = user?.email
 					if (!email) return
 
+					console.log('Sent Email to', email)
+
 					await resend.emails.send({
 						from: 'onboarding@resend.dev',
 						to: email,
