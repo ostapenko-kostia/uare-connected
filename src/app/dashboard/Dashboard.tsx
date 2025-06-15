@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useMatches } from '@/hooks/useMatches'
 import { useGetMeets } from '@/hooks/useMeets'
 import { useUser } from '@/hooks/useUser'
-import { MeetCard } from './MeetCard'
-import { useLayoutEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useLayoutEffect } from 'react'
+import { MeetCard } from './MeetCard'
 
 export default function Dashboard() {
 	const { data: user, isLoading: userLoading, error: userError } = useUser()
@@ -168,7 +168,84 @@ export default function Dashboard() {
 									</Card>
 								))}
 							</div>
-							{/* Nearest meets */}
+							{/* Мої міти */}
+							<Card>
+								<CardHeader className='flex flex-row items-center justify-between pb-2'>
+									<CardTitle>Мої міти</CardTitle>
+									<Button variant='outline' size='sm'>
+										Переглянути всі
+									</Button>
+								</CardHeader>
+								<CardContent>
+									{meetsLoading ? (
+										<div className='flex items-center justify-center py-8'>
+											<div className='text-gray-400'>Завантаження мітів...</div>
+										</div>
+									) : organizedMeets.length === 0 &&
+									  attendedMeets.length === 0 ? (
+										<div className='flex flex-col items-center justify-center py-8'>
+											<div className='text-gray-400 mb-4'>
+												У вас ще немає мітів
+												<br />
+												Створіть свій перший міт або приєднайтесь до існуючого
+											</div>
+											<Link href='/meets/create'>
+												<Button>Створити міт</Button>
+											</Link>
+										</div>
+									) : (
+										<div className='flex flex-col gap-4'>
+											{organizedMeets.length > 0 && (
+												<div>
+													<h4 className='text-sm font-medium text-gray-700 mb-2'>
+														Організовані мною ({organizedMeets.length})
+													</h4>
+													{organizedMeets.slice(0, 2).map((meet: any) => (
+														<div key={meet.id} className='mb-2'>
+															<MeetCard meet={meet} />
+														</div>
+													))}
+												</div>
+											)}
+											{attendedMeets.length > 0 && (
+												<div>
+													<h4 className='text-sm font-medium text-gray-700 mb-2'>
+														Відвідані ({attendedMeets.length})
+													</h4>
+													{attendedMeets.slice(0, 2).map((meet: any) => (
+														<div key={meet.id} className='mb-2'>
+															<MeetCard meet={meet} />
+														</div>
+													))}
+												</div>
+											)}
+										</div>
+									)}
+								</CardContent>
+							</Card>
+
+							<div className='row-start-2 col-start-1' id='matches'>
+								<Card>
+									<CardHeader>
+										<CardTitle className='text-base'>Мої метчі</CardTitle>
+									</CardHeader>
+									<CardContent>
+										{matchesLoading ? (
+											<div className='text-xs text-gray-400'>
+												Завантаження...
+											</div>
+										) : matchesArray.length === 0 ? (
+											<div className='text-xs text-gray-400'>Немає метчів</div>
+										) : (
+											<div className='flex flex-col gap-4'>
+												{matchesArray.map((meet: any) => (
+													<MeetCard key={meet.id} meet={meet} />
+												))}
+											</div>
+										)}
+									</CardContent>
+								</Card>
+							</div>
 							<Card>
 								<CardHeader className='flex flex-row items-center justify-between pb-2'>
 									<CardTitle>Найближчі міти</CardTitle>
@@ -206,6 +283,45 @@ export default function Dashboard() {
 					<div className='row-span-2'>
 						{/* Sidebar */}
 						<div className='flex-1 flex flex-col gap-6'>
+							{/* User info */}
+							<Card>
+								<CardHeader>
+									<CardTitle className='text-base'>
+										Інформація про користувача
+									</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<div className='flex flex-col gap-3'>
+										<div>
+											<span className='text-sm font-medium text-gray-700'>
+												Ім'я:
+											</span>
+											<span className='ml-2 text-sm'>
+												{user?.firstName || 'Не вказано'}
+											</span>
+										</div>
+										<div>
+											<span className='text-sm font-medium text-gray-700'>
+												Прізвище:
+											</span>
+											<span className='ml-2 text-sm'>
+												{user?.lastName || 'Не вказано'}
+											</span>
+										</div>
+										<div>
+											<span className='text-sm font-medium text-gray-700'>
+												Email:
+											</span>
+											<span
+												style={{ overflowWrap: 'break-word' }}
+												className='ml-2 text-sm text-blue-600'
+											>
+												{user?.email || 'Не вказано'}
+											</span>
+										</div>
+									</div>
+								</CardContent>
+							</Card>
 							{/* Profile progress */}
 							<Card>
 								<CardHeader>
@@ -226,11 +342,18 @@ export default function Dashboard() {
 											style={{ width: `${profileProgress}%` }}
 										/>
 									</div>
-									<div className='text-green-700 text-xs font-medium'>
+									<div className='text-green-700 text-xs font-medium mb-3'>
 										{profileProgress === 100
 											? 'Профіль завершено'
 											: 'Заповніть профіль для кращих рекомендацій'}
 									</div>
+									{profileProgress < 100 && (
+										<Link href='/questionnaire'>
+											<Button variant='outline' size='sm' className='w-full'>
+												Заповнити профіль
+											</Button>
+										</Link>
+									)}
 								</CardContent>
 							</Card>
 							{/* Languages */}
@@ -304,26 +427,6 @@ export default function Dashboard() {
 								</CardContent>
 							</Card>
 						</div>
-					</div>
-					<div className='row-start-2 col-start-1'>
-						<Card>
-							<CardHeader>
-								<CardTitle className='text-base'>Мої метчі</CardTitle>
-							</CardHeader>
-							<CardContent>
-								{matchesLoading ? (
-									<div className='text-xs text-gray-400'>Завантаження...</div>
-								) : matchesArray.length === 0 ? (
-									<div className='text-xs text-gray-400'>Немає метчів</div>
-								) : (
-									<div className='flex flex-col gap-4'>
-										{matchesArray.map((meet: any) => (
-											<MeetCard key={meet.id} meet={meet} />
-										))}
-									</div>
-								)}
-							</CardContent>
-						</Card>
 					</div>
 				</div>
 			</Container>
