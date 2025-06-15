@@ -170,6 +170,8 @@ export const meetService = {
 		if (!meet) throw new ApiError('Зустріч не знайдена', 404)
 		if (!user) throw new ApiError('Будь ласка, авторизуйтесь', 401)
 
+		console.log('Sent Email to', user.email)
+
 		await resend.emails.send({
 			from: 'onboarding@resend.dev',
 			to: user.email,

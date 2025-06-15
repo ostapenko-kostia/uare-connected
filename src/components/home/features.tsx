@@ -18,10 +18,11 @@ export function Features() {
 						<div className='w-16 h-16 bg-blue-300 rounded-lg mb-6 flex items-center justify-center'>
 							<Users className='w-8 h-8 text-white' />
 						</div>
-						<h3 className='text-xl font-semibold mb-2'>Ші людей учасників</h3>
+						<h3 className='text-xl font-semibold mb-2'>ШІ підбір учасників</h3>
 						<p className='text-gray-600'>
-							Ми маємо велику спільноту людей з різних країн світу, готових до
-							спілкування та обміну досвідом.
+							Наш розумний алгоритм знаходить людей з
+							схожими інтересами, мовами та хобі для
+							ваших мітів.
 						</p>
 					</div>
 
